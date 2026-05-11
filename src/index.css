@@ -1,0 +1,105 @@
+@import "tailwindcss";
+
+@theme {
+  /* ── Fonts ── */
+  --font-sans: 'Outfit', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'Cascadia Code', 'Fira Code', monospace;
+
+  /* ── Surface Elevation (warm dark greys) ── */
+  --color-void: #0d0d0d;
+  --color-base: #141414;
+  --color-surface: #1a1a1a;
+  --color-raised: #222222;
+  --color-overlay: #2a2a2a;
+
+  /* ── Borders ── */
+  --color-edge: #2a2a2a;
+  --color-edge-bright: #3a3a3a;
+
+  /* ── Text ── */
+  --color-ink: #d4d4d4;
+  --color-ink-secondary: #a0a0a0;
+  --color-ink-muted: #6b6b6b;
+  --color-ink-faint: #4a4a4a;
+
+  /* ── Accent (vintage terminal green) ── */
+  --color-glow: #4ade80;
+  --color-glow-dim: #14532d;
+  --color-glow-hover: #86efac;
+
+  /* ── Semantic ── */
+  --color-correct: #4ade80;
+  --color-correct-dim: #14532d;
+  --color-wrong: #f87171;
+  --color-wrong-dim: #450a0a;
+
+  /* ── Session Tab Colors ── */
+  --color-s1: #4ade80;
+  --color-s2: #a78bfa;
+  --color-s3: #22d3ee;
+  --color-s4: #fbbf24;
+  --color-s5: #fb923c;
+
+  /* ── Animation ── */
+  --animate-fade-in: fade-in 0.3s ease-out;
+  --animate-slide-down: slide-down 0.25s ease-out;
+  --animate-scale-in: scale-in 0.2s ease-out;
+}
+
+@keyframes fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes slide-down {
+  from { opacity: 0; max-height: 0; }
+  to { opacity: 1; max-height: 2000px; }
+}
+
+@keyframes scale-in {
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
+}
+
+html {
+  color-scheme: dark;
+}
+
+body {
+  background-color: var(--color-void);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+}
+
+::selection {
+  background-color: var(--color-glow-dim);
+  color: var(--color-glow);
+}
+
+input::placeholder {
+  color: var(--color-ink-muted);
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--color-edge-bright);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-ink-muted);
+}
+
+.highlight-match {
+  background-color: var(--color-glow-dim);
+  color: var(--color-glow);
+  border-radius: 2px;
+  padding: 0 2px;
+}
