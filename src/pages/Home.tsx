@@ -44,6 +44,22 @@ export default function Home() {
   return (
     <div className="max-w-4xl mx-auto px-6 py-12">
       <div className="text-center mb-12 animate-fade-in">
+        <div className="mb-6">
+          <svg viewBox="0 0 200 200" className="w-28 h-28 mx-auto drop-shadow-[0_0_24px_rgba(74,222,128,0.25)]" aria-label="StudyComrade logo">
+            <circle cx="100" cy="100" r="95" fill="none" stroke="currentColor" className="text-glow/30" strokeWidth="3" />
+            <circle cx="100" cy="100" r="85" fill="none" stroke="currentColor" className="text-glow/15" strokeWidth="1" />
+            <polygon
+              points="100,28 112,68 154,68 120,90 132,130 100,106 68,130 80,90 46,68 88,68"
+              fill="currentColor"
+              className="text-glow"
+              opacity="0.9"
+            />
+            <line x1="70" y1="170" x2="120" y2="110" stroke="currentColor" className="text-glow" strokeWidth="5" strokeLinecap="round" />
+            <rect x="108" y="96" width="28" height="12" rx="2" fill="currentColor" className="text-glow" transform="rotate(-42 122 102)" />
+            <path d="M 130 170 Q 160 140 150 110 Q 145 95 130 90" fill="none" stroke="currentColor" className="text-glow" strokeWidth="5" strokeLinecap="round" />
+            <line x1="130" y1="170" x2="118" y2="182" stroke="currentColor" className="text-glow" strokeWidth="5" strokeLinecap="round" />
+          </svg>
+        </div>
         <div className="inline-block mb-4">
           <span className="text-xs font-mono text-glow bg-glow-dim px-3 py-1 rounded-full border border-glow/20">
             ☭ v1.0 — 5 Sessions
