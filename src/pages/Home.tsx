@@ -1,10 +1,11 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, List, Code2, FlaskConical, GraduationCap, ArrowRight } from 'lucide-react'
+import { BookOpen, List, Code2, FlaskConical, GraduationCap, ClipboardCheck, ArrowRight } from 'lucide-react'
 import { sessions } from '../data/topics'
 import { definitions } from '../data/definitions'
 import { snippets } from '../data/snippets'
 import { questions } from '../data/questions'
 import { examQuestions } from '../data/midterm'
+import { mockQuestions } from '../data/mockExam'
 
 const cards = [
   {
@@ -46,6 +47,14 @@ const cards = [
     description: 'Scenario-based exam prep with code walkthroughs and a test-selection decision tree',
     count: examQuestions.length,
     unit: 'scenarios',
+  },
+  {
+    to: '/mock',
+    icon: ClipboardCheck,
+    title: 'Mock Exam',
+    description: 'Timed mock mid-term with MCQ, multi-select, and short answer sections',
+    count: mockQuestions.length,
+    unit: 'questions',
   },
 ] as const
 

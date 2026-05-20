@@ -6,6 +6,7 @@ import {
   Code2,
   FlaskConical,
   GraduationCap,
+  ClipboardCheck,
 } from 'lucide-react'
 
 const navItems = [
@@ -15,6 +16,7 @@ const navItems = [
   { to: '/snippets', label: 'Snippets', icon: Code2 },
   { to: '/practice', label: 'Practice', icon: FlaskConical },
   { to: '/midterm', label: 'Midterm', icon: GraduationCap },
+  { to: '/mock', label: 'Mock', icon: ClipboardCheck },
 ] as const
 
 export default function NavPill() {

@@ -7,6 +7,7 @@ import Definitions from './pages/Definitions'
 import Snippets from './pages/Snippets'
 import Practice from './pages/Practice'
 import MidtermExam from './pages/MidtermExam'
+import MockExam from './pages/MockExam'
 
 export default function App() {
   return (
@@ -22,6 +23,7 @@ export default function App() {
           <Route path="/snippets" element={<Snippets />} />
           <Route path="/practice" element={<Practice />} />
           <Route path="/midterm" element={<MidtermExam />} />
+          <Route path="/mock" element={<MockExam />} />
         </Routes>
       </main>
       <NavPill />
