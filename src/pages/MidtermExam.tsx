@@ -11,8 +11,9 @@ import {
   Filter,
   Eye,
   EyeOff,
+  BookOpen,
 } from 'lucide-react'
-import { examQuestions, testSelectionTree, type ExamQuestion, type Difficulty, type QuestionType } from '../data/midterm'
+import { examQuestions, testSelectionTree, cheatSheets, type ExamQuestion, type CheatSheet, type Difficulty, type QuestionType } from '../data/midterm'
 
 type SessionFilter = 'all' | 1 | 2 | 3 | 4 | 5
 
@@ -204,6 +205,55 @@ function QuestionCard({ question, index, expanded, onToggle }: {
   )
 }
 
+function CheatSheetTable({ sheet }: { readonly sheet: CheatSheet }) {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <div className="bg-surface border border-edge rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center gap-3 p-4 text-left hover:bg-raised transition-colors duration-150 cursor-pointer"
+      >
+        <span className="text-s3 shrink-0"><BookOpen size={16} /></span>
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-ink">{sheet.title}</h4>
+          <p className="text-xs text-ink-muted">{sheet.description}</p>
+        </div>
+        {open
+          ? <ChevronDown size={14} className="text-ink-muted shrink-0" />
+          : <ChevronRight size={14} className="text-ink-muted shrink-0" />
+        }
+      </button>
+      {open && (
+        <div className="border-t border-edge overflow-x-auto animate-fade-in">
+          <table className="w-full text-sm">
+            <thead>
+              <tr className="bg-raised">
+                {sheet.headers.map(h => (
+                  <th key={h} className="px-4 py-2.5 text-left text-[10px] font-mono text-ink-muted uppercase tracking-wider">
+                    {h}
+                  </th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {sheet.rows.map((row, i) => (
+                <tr key={i} className="border-t border-edge hover:bg-raised/50 transition-colors duration-100">
+                  {row.cells.map((cell, j) => (
+                    <td key={j} className={`px-4 py-2.5 ${j === 0 ? 'font-mono text-glow/80' : 'text-ink-secondary'}`}>
+                      {cell}
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  )
+}
+
 function DecisionTree() {
   const [currentId, setCurrentId] = useState('start')
   const [history, setHistory] = useState<readonly string[]>([])
@@ -321,6 +371,7 @@ export default function MidtermExam() {
   const [order, setOrder] = useState<readonly number[]>([])
   const [expandedIds, setExpandedIds] = useState<ReadonlySet<number>>(new Set())
   const [showTree, setShowTree] = useState(true)
+  const [showCheatSheets, setShowCheatSheets] = useState(true)
 
   const filtered = useMemo(() => {
     const base = filter === 'all'
@@ -458,6 +509,24 @@ export default function MidtermExam() {
           {showTree ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
         </button>
         {showTree && <DecisionTree />}
+      </div>
+
+      <div className="mb-6">
+        <button
+          onClick={() => setShowCheatSheets(s => !s)}
+          className="flex items-center gap-2 text-sm font-medium text-s3 hover:text-s3/80 transition-colors duration-150 mb-3 cursor-pointer"
+        >
+          <BookOpen size={16} />
+          {showCheatSheets ? 'Hide' : 'Show'} Cheat Sheets
+          {showCheatSheets ? <ChevronDown size={14} /> : <ChevronRight size={14} />}
+        </button>
+        {showCheatSheets && (
+          <div className="space-y-3 animate-fade-in">
+            {cheatSheets.map(sheet => (
+              <CheatSheetTable key={sheet.id} sheet={sheet} />
+            ))}
+          </div>
+        )}
       </div>
 
       <div className="space-y-3">

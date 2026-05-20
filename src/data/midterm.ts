@@ -51,6 +51,111 @@ export const testSelectionTree: readonly DecisionNode[] = [
   { id: 'nonparametric', question: 'Are the samples paired (same subjects)?', yes: 'RESULT: Wilcoxon Signed-Rank — stats.wilcoxon(x, y, alternative=...)', no: 'RESULT: Mann-Whitney U — stats.mannwhitneyu(x, y, alternative=...)' },
 ]
 
+export interface CheatSheetRow {
+  readonly cells: readonly string[]
+}
+
+export interface CheatSheet {
+  readonly id: string
+  readonly title: string
+  readonly description: string
+  readonly headers: readonly string[]
+  readonly rows: readonly CheatSheetRow[]
+}
+
+export const cheatSheets: readonly CheatSheet[] = [
+  {
+    id: 'scipy-functions',
+    title: 'scipy.stats Functions',
+    description: 'PMF, PDF, CDF, PPF, SF, ISF, RVS — what each does and when to use it',
+    headers: ['Function', 'Question It Answers', 'Direction'],
+    rows: [
+      { cells: ['pmf(x)', 'P(X = exactly x)?', 'value → probability (discrete only)'] },
+      { cells: ['pdf(x)', 'Density at x?', 'value → density (continuous only)'] },
+      { cells: ['cdf(x)', 'P(X ≤ x)?', 'value → probability'] },
+      { cells: ['sf(x)', 'P(X > x)?', 'value → probability (= 1 − cdf)'] },
+      { cells: ['ppf(p)', 'What x gives P(X ≤ x) = p?', 'probability → value (inverse of cdf)'] },
+      { cells: ['isf(p)', 'What x gives P(X > x) = p?', 'probability → value (inverse of sf)'] },
+      { cells: ['rvs(size=n)', 'Generate n random samples', '→ array of random values'] },
+      { cells: ['interval(conf)', '(low, high) CI bounds', 'confidence level → value pair'] },
+    ],
+  },
+  {
+    id: 'distribution-params',
+    title: 'Distribution Parameters',
+    description: 'What loc, scale, and named params mean for each scipy.stats distribution',
+    headers: ['Distribution', 'Parameters', 'Watch Out'],
+    rows: [
+      { cells: ['stats.norm', 'loc=μ (mean), scale=σ (std dev)', 'scale is σ, NOT σ²'] },
+      { cells: ['stats.t', 'df=n−1, loc=x̄, scale=s/√n', 'scale is std error, not std dev'] },
+      { cells: ['stats.expon', 'scale=1/λ', 'scale = 1/rate, NOT λ itself'] },
+      { cells: ['stats.binom', 'n (trials), p (success prob)', 'No loc/scale — discrete'] },
+      { cells: ['stats.poisson', 'mu=λ (mean rate)', 'Convert rate to match time interval first'] },
+      { cells: ['stats.uniform', 'loc=a, scale=b−a', 'scale is range width, not upper bound'] },
+      { cells: ['stats.randint', 'low, high', 'high is exclusive (like Python range)'] },
+    ],
+  },
+  {
+    id: 'std-dev-gotcha',
+    title: 'Standard Deviation: Pandas vs NumPy',
+    description: 'The #1 exam gotcha — Pandas and NumPy default to different ddof values',
+    headers: ['Library', 'Default ddof', 'Gives You', 'Override'],
+    rows: [
+      { cells: ['pd.Series.std()', 'ddof=1', 'Sample std (n−1)', '.std(ddof=0) for population'] },
+      { cells: ['np.std()', 'ddof=0', 'Population std (n)', 'np.std(a, ddof=1) for sample'] },
+      { cells: ['pd.Series.var()', 'ddof=1', 'Sample variance', '.var(ddof=0) for population'] },
+      { cells: ['np.var()', 'ddof=0', 'Population variance', 'np.var(a, ddof=1) for sample'] },
+    ],
+  },
+  {
+    id: 'hypothesis-tests',
+    title: 'Hypothesis Test Selection',
+    description: 'Quick reference for picking the right scipy.stats test function',
+    headers: ['Scenario', 'Test', 'scipy Function'],
+    rows: [
+      { cells: ['1 sample, σ known', 'Z-test', 'Manual: z=(x̄−μ)/(σ/√n), p via stats.norm.sf()'] },
+      { cells: ['1 sample, σ unknown', 't-test', 'stats.ttest_1samp(data, popmean, alternative=...)'] },
+      { cells: ['2 indep, equal var', 'Pooled t', 'stats.ttest_ind(a, b, equal_var=True)'] },
+      { cells: ['2 indep, unequal var', 'Welch t', 'stats.ttest_ind(a, b, equal_var=False)'] },
+      { cells: ['2 indep, summary stats', 'From stats', 'stats.ttest_ind_from_stats(mean1, std1, nobs1, ...)'] },
+      { cells: ['Paired (same subjects)', 'Paired t', 'stats.ttest_rel(after, before, alternative=...)'] },
+      { cells: ['Non-normal, unpaired', 'Mann-Whitney U', 'stats.mannwhitneyu(x, y, alternative=...)'] },
+      { cells: ['Non-normal, paired', 'Wilcoxon', 'stats.wilcoxon(x, y, alternative=...)'] },
+      { cells: ['Check normality', 'Shapiro-Wilk', 'stats.shapiro(data)'] },
+      { cells: ['Check normality (general)', 'KS test', 'stats.kstest(data, "norm", args=(mean, std))'] },
+    ],
+  },
+  {
+    id: 'confidence-intervals',
+    title: 'Confidence Intervals',
+    description: 'How to construct CIs depending on what you know about the data',
+    headers: ['Scenario', 'Distribution', 'Code Pattern'],
+    rows: [
+      { cells: ['σ known, 1 sample', 'Normal', 'stats.norm(loc=x̄, scale=σ/√n).interval(conf)'] },
+      { cells: ['σ unknown, 1 sample', 't', 'stats.t(df=n−1, loc=x̄, scale=s/√n).interval(conf)'] },
+      { cells: ['2 indep, equal var', 'Pooled t', 'stats.ttest_ind(a, b, equal_var=True).confidence_interval(conf)'] },
+      { cells: ['2 indep, unequal var', 'Welch t', 'stats.ttest_ind(a, b, equal_var=False).confidence_interval(conf)'] },
+      { cells: ['Paired samples', 'Paired t', 'stats.ttest_rel(after, before).confidence_interval(conf)'] },
+    ],
+  },
+  {
+    id: 'probability-keywords',
+    title: 'Probability Keyword → Function',
+    description: 'Translate exam question wording into the right scipy function call',
+    headers: ['Exam Says', 'Means', 'Use'],
+    rows: [
+      { cells: ['at most x / no more than x', 'P(X ≤ x)', 'cdf(x)'] },
+      { cells: ['less than x', 'P(X < x)', 'cdf(x−1) discrete, cdf(x) continuous'] },
+      { cells: ['more than x / exceeds x', 'P(X > x)', 'sf(x)'] },
+      { cells: ['at least x / no fewer than x', 'P(X ≥ x)', 'sf(x−1) discrete, sf(x) continuous'] },
+      { cells: ['exactly x', 'P(X = x)', 'pmf(x) discrete, 0 for continuous'] },
+      { cells: ['between a and b (inclusive)', 'P(a ≤ X ≤ b)', 'cdf(b) − cdf(a−1) disc, cdf(b) − cdf(a) cont'] },
+      { cells: ['find value where top p%', 'P(X > c) = p', 'isf(p)'] },
+      { cells: ['find value at pth percentile', 'P(X ≤ c) = p', 'ppf(p)'] },
+    ],
+  },
+]
+
 export const examQuestions: readonly ExamQuestion[] = [
   // ─── SESSION 1: Foundations ──────────────────────────────────────────
   {
