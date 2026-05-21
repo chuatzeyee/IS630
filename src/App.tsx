@@ -8,6 +8,7 @@ import Snippets from './pages/Snippets'
 import Practice from './pages/Practice'
 import MidtermExam from './pages/MidtermExam'
 import MockExam from './pages/MockExam'
+import Formulas from './pages/Formulas'
 
 export default function App() {
   return (
@@ -24,6 +25,7 @@ export default function App() {
           <Route path="/practice" element={<Practice />} />
           <Route path="/midterm" element={<MidtermExam />} />
           <Route path="/mock" element={<MockExam />} />
+          <Route path="/formulas" element={<Formulas />} />
         </Routes>
       </main>
       <NavPill />

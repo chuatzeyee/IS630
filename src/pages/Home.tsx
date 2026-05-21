@@ -1,11 +1,12 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, List, Code2, FlaskConical, GraduationCap, ClipboardCheck, ArrowRight } from 'lucide-react'
+import { BookOpen, List, Code2, FlaskConical, GraduationCap, ClipboardCheck, Calculator, ArrowRight } from 'lucide-react'
 import { sessions } from '../data/topics'
 import { definitions } from '../data/definitions'
 import { snippets } from '../data/snippets'
 import { questions } from '../data/questions'
 import { examQuestions } from '../data/midterm'
 import { mockQuestions } from '../data/mockExam'
+import { formulaCount } from '../data/formulas'
 
 const cards = [
   {
@@ -55,6 +56,14 @@ const cards = [
     description: 'Timed mock mid-term with MCQ, multi-select, and short answer sections',
     count: mockQuestions.length,
     unit: 'questions',
+  },
+  {
+    to: '/formulas',
+    icon: Calculator,
+    title: 'Formula Sheet',
+    description: 'Key statistical formulas with variable definitions, Python code, and common gotchas',
+    count: formulaCount,
+    unit: 'formulas',
   },
 ] as const
 
