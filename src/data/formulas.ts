@@ -1,3 +1,265 @@
+// ─── Python Templates ──────────────────────────────────────────────────────
+
+export interface PythonTemplate {
+  readonly name: string
+  readonly code: string
+  readonly description: string
+  readonly params?: readonly string[]
+  readonly gotcha?: string
+}
+
+export interface TemplateCategory {
+  readonly id: string
+  readonly title: string
+  readonly description: string
+  readonly templates: readonly PythonTemplate[]
+}
+
+export const pythonTemplates: readonly TemplateCategory[] = [
+  {
+    id: 'create-distributions',
+    title: 'Creating Distributions',
+    description: 'How to set up scipy.stats distribution objects',
+    templates: [
+      {
+        name: 'Normal',
+        code: 'stats.norm(loc=mu, scale=sigma)',
+        description: 'Continuous. Bell curve centered at μ with spread σ.',
+        params: ['loc = μ (mean)', 'scale = σ (std dev, NOT variance)'],
+        gotcha: 'Textbook says N(μ, σ²) — second param is variance. scipy scale is σ = √(σ²).',
+      },
+      {
+        name: 'Student\'s t',
+        code: 'stats.t(df=n-1, loc=x_bar, scale=s/np.sqrt(n))',
+        description: 'Continuous. Like normal but with fatter tails. Used when σ is unknown.',
+        params: ['df = degrees of freedom = n − 1', 'loc = x̄ (sample mean)', 'scale = s/√n (standard error)'],
+        gotcha: 'scale is the standard error s/√n, not just s.',
+      },
+      {
+        name: 'Binomial',
+        code: 'stats.binom(n=trials, p=prob)',
+        description: 'Discrete. Number of successes in n independent trials.',
+        params: ['n = number of trials', 'p = probability of success per trial'],
+      },
+      {
+        name: 'Poisson',
+        code: 'stats.poisson(mu=lam)',
+        description: 'Discrete. Number of events in a fixed interval.',
+        params: ['mu = λ (average rate per interval)'],
+        gotcha: 'Convert rate to match interval first: 360/hr over 40sec → λ = 360/3600 × 40 = 4.',
+      },
+      {
+        name: 'Exponential',
+        code: 'stats.expon(scale=1/lam)',
+        description: 'Continuous. Time between events in a Poisson process.',
+        params: ['scale = 1/λ (mean time between events)'],
+        gotcha: 'scale = 1/λ, NOT λ. If rate is 15/hour, scale = 1/(15/60) = 4 minutes.',
+      },
+      {
+        name: 'Uniform',
+        code: 'stats.uniform(loc=a, scale=b-a)',
+        description: 'Continuous. All values between a and b equally likely.',
+        params: ['loc = a (lower bound)', 'scale = b − a (range width, not upper bound)'],
+      },
+      {
+        name: 'Discrete Uniform (randint)',
+        code: 'stats.randint(low, high)',
+        description: 'Discrete. Integers from low to high−1, each equally likely.',
+        params: ['low = minimum value', 'high = exclusive upper bound (like Python range)'],
+      },
+    ],
+  },
+  {
+    id: 'dist-functions',
+    title: 'Distribution Functions',
+    description: 'Methods available on any scipy.stats distribution object',
+    templates: [
+      {
+        name: 'pmf(x) — exact probability (discrete)',
+        code: 'dist.pmf(x)  # P(X = x)',
+        description: 'Probability of exactly x. Only works on discrete distributions (binom, poisson, randint).',
+      },
+      {
+        name: 'pdf(x) — density (continuous)',
+        code: 'dist.pdf(x)  # density at x',
+        description: 'Density at x. NOT a probability — for continuous distributions, P(X = exact) = 0.',
+      },
+      {
+        name: 'cdf(x) — cumulative probability',
+        code: 'dist.cdf(x)  # P(X ≤ x)',
+        description: 'P(X ≤ x). Use for "at most", "no more than", "less than or equal".',
+      },
+      {
+        name: 'sf(x) — survival function',
+        code: 'dist.sf(x)  # P(X > x) = 1 - cdf(x)',
+        description: 'P(X > x). Use for "more than", "exceeds", "greater than".',
+      },
+      {
+        name: 'ppf(p) — inverse CDF',
+        code: 'dist.ppf(p)  # smallest x where P(X ≤ x) ≥ p',
+        description: 'Given a probability p, find the value x. Use for percentiles and lower CI bounds.',
+      },
+      {
+        name: 'isf(p) — inverse survival',
+        code: 'dist.isf(p)  # smallest x where P(X > x) ≤ p',
+        description: 'Given a tail probability p, find the cutoff. Use for "top p%" and upper CI bounds.',
+      },
+      {
+        name: 'rvs(size=n) — random samples',
+        code: 'dist.rvs(size=1000)  # generate 1000 random values',
+        description: 'Generate n random values from the distribution. For simulation and CLT demos.',
+      },
+      {
+        name: 'interval(confidence) — CI bounds',
+        code: 'dist.interval(0.95)  # (lower, upper)',
+        description: 'Returns (lower, upper) bounds of a symmetric confidence interval.',
+      },
+    ],
+  },
+  {
+    id: 'test-templates',
+    title: 'Hypothesis Tests',
+    description: 'scipy.stats test functions — each returns (statistic, p-value)',
+    templates: [
+      {
+        name: 'One-sample Z-test (manual)',
+        code: 'z = (x_bar - mu0) / (sigma / np.sqrt(n))\np_two = 2 * stats.norm.sf(abs(z))\np_right = stats.norm.sf(z)\np_left = stats.norm.cdf(z)',
+        description: 'σ known. Compute z-stat manually, then get p-value from normal distribution.',
+        params: ['x_bar = sample mean', 'mu0 = hypothesized mean', 'sigma = population std dev', 'n = sample size'],
+        gotcha: 'Two-tailed: multiply sf(|z|) by 2. One-tailed: use sf (right) or cdf (left) directly.',
+      },
+      {
+        name: 'One-sample t-test',
+        code: 'stats.ttest_1samp(data, popmean=mu0, alternative="two-sided")',
+        description: 'σ unknown. Tests if sample mean differs from a hypothesized value.',
+        params: ['data = array of observations', 'popmean = hypothesized mean', 'alternative = "two-sided" | "greater" | "less"'],
+      },
+      {
+        name: 'Two-sample t-test (independent, raw data)',
+        code: 'stats.ttest_ind(a, b, equal_var=True, alternative="two-sided")',
+        description: 'Two independent groups. Set equal_var=True for pooled, False for Welch.',
+        params: ['a, b = arrays of observations', 'equal_var = True (pooled) or False (Welch)', 'alternative = tail direction'],
+      },
+      {
+        name: 'Two-sample t-test (from summary stats)',
+        code: 'stats.ttest_ind_from_stats(\n    mean1=x1, std1=s1, nobs1=n1,\n    mean2=x2, std2=s2, nobs2=n2,\n    equal_var=True\n)',
+        description: 'Same as ttest_ind but when you only have summary statistics, not raw data.',
+        params: ['mean1, std1, nobs1 = group 1 stats', 'mean2, std2, nobs2 = group 2 stats'],
+      },
+      {
+        name: 'Paired t-test',
+        code: 'stats.ttest_rel(after, before, alternative="greater")',
+        description: 'Same subjects measured twice. Tests if there is a difference.',
+        params: ['after = post-treatment values', 'before = pre-treatment values'],
+        gotcha: 'Order matters: (after, before) with alternative="greater" tests if after > before.',
+      },
+      {
+        name: 'Mann-Whitney U (non-parametric, unpaired)',
+        code: 'stats.mannwhitneyu(x, y, alternative="less")',
+        description: 'Non-normal, independent samples. Compares rank distributions.',
+        params: ['x, y = arrays of observations', 'alternative = direction of the test'],
+      },
+      {
+        name: 'Wilcoxon Signed-Rank (non-parametric, paired)',
+        code: 'stats.wilcoxon(after, before, alternative="greater")',
+        description: 'Non-normal, paired samples. Tests if paired differences are symmetric around zero.',
+        params: ['after, before = paired arrays'],
+      },
+      {
+        name: 'Shapiro-Wilk (normality test)',
+        code: 'stat, p = stats.shapiro(data)',
+        description: 'Tests H₀: data is normally distributed. Reject if p < α.',
+      },
+      {
+        name: 'KS test (normality test)',
+        code: 'stats.kstest(data, "norm",\n    args=(np.mean(data), np.std(data, ddof=1)))',
+        description: 'General goodness-of-fit test. Tests if data follows a specified distribution.',
+        gotcha: 'Must pass (mean, std) as args — without them it tests against standard normal N(0,1).',
+      },
+    ],
+  },
+  {
+    id: 'ci-templates',
+    title: 'Confidence Intervals',
+    description: 'Code patterns for constructing CIs',
+    templates: [
+      {
+        name: 'Z-based CI (σ known)',
+        code: 'stats.norm(\n    loc=x_bar,\n    scale=sigma / np.sqrt(n)\n).interval(0.95)',
+        description: 'Use when population σ is known.',
+        params: ['loc = x̄', 'scale = σ/√n (standard error)'],
+      },
+      {
+        name: 't-based CI (σ unknown)',
+        code: 'stats.t(\n    df=n-1,\n    loc=x_bar,\n    scale=np.std(data, ddof=1) / np.sqrt(n)\n).interval(0.95)',
+        description: 'Use when σ is unknown (most common case).',
+        params: ['df = n − 1', 'loc = x̄', 'scale = s/√n'],
+        gotcha: 'Use ddof=1 for sample std, and divide by √n for standard error.',
+      },
+      {
+        name: 'CI via ppf (manual bounds)',
+        code: 'lower = dist.ppf(alpha / 2)\nupper = dist.ppf(1 - alpha / 2)',
+        description: 'Equivalent to .interval() — ppf(0.025) gives lower, ppf(0.975) gives upper for 95% CI.',
+      },
+      {
+        name: 'Two-sample CI (independent)',
+        code: 'stats.ttest_ind(a, b, equal_var=True)\n    .confidence_interval(0.95)',
+        description: 'CI for difference in means. Set equal_var=False for Welch.',
+      },
+      {
+        name: 'Paired CI',
+        code: 'stats.ttest_rel(after, before)\n    .confidence_interval(0.95)',
+        description: 'CI for mean of paired differences.',
+      },
+    ],
+  },
+  {
+    id: 'descriptive-code',
+    title: 'Descriptive Statistics',
+    description: 'NumPy and Pandas functions for summary stats',
+    templates: [
+      {
+        name: 'Mean, Median, Mode',
+        code: 'np.mean(data)\nnp.median(data)\npd.Series(data).mode()  # returns all modes',
+        description: 'Central tendency measures. mode() returns a Series — use .iloc[0] for a scalar.',
+      },
+      {
+        name: 'Std Dev (population vs sample)',
+        code: 'np.std(data)          # population (ddof=0)\nnp.std(data, ddof=1)  # sample (ddof=1)\npd.Series(data).std() # sample (ddof=1 default)',
+        description: 'NumPy defaults to population (ddof=0). Pandas defaults to sample (ddof=1).',
+        gotcha: 'This is the #1 exam gotcha. np.std and pd.std give different answers on the same data.',
+      },
+      {
+        name: 'Variance (population vs sample)',
+        code: 'np.var(data)          # population (ddof=0)\nnp.var(data, ddof=1)  # sample (ddof=1)\npd.Series(data).var() # sample (ddof=1 default)',
+        description: 'Same ddof gotcha as std dev.',
+      },
+      {
+        name: 'Percentiles & IQR',
+        code: 'np.percentile(data, 25)   # Q1\nnp.percentile(data, 75)   # Q3\nIQR = np.percentile(data, 75) - np.percentile(data, 25)',
+        description: 'Quartiles and interquartile range.',
+      },
+      {
+        name: 'Range',
+        code: 'np.ptp(data)  # peak-to-peak = max - min',
+        description: 'Shortcut for max − min.',
+      },
+      {
+        name: 'Full summary',
+        code: 'pd.Series(data).describe()',
+        description: 'Returns count, mean, std, min, 25%, 50%, 75%, max in one call.',
+      },
+    ],
+  },
+]
+
+export const templateCount = pythonTemplates.reduce(
+  (sum, cat) => sum + cat.templates.length,
+  0
+)
+
+// ─── Mathematical Formulas ─────────────────────────────────────────────────
+
 export interface Formula {
   readonly name: string
   readonly formula: string

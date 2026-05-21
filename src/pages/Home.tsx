@@ -6,7 +6,7 @@ import { snippets } from '../data/snippets'
 import { questions } from '../data/questions'
 import { examQuestions } from '../data/midterm'
 import { mockQuestions } from '../data/mockExam'
-import { formulaCount } from '../data/formulas'
+import { formulaCount, templateCount } from '../data/formulas'
 
 const cards = [
   {
@@ -61,9 +61,9 @@ const cards = [
     to: '/formulas',
     icon: Calculator,
     title: 'Formula Sheet',
-    description: 'Key statistical formulas with variable definitions, Python code, and common gotchas',
-    count: formulaCount,
-    unit: 'formulas',
+    description: 'scipy.stats Python templates and mathematical formulas with gotchas',
+    count: templateCount + formulaCount,
+    unit: 'entries',
   },
 ] as const
 
