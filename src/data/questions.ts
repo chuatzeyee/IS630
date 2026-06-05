@@ -1285,5 +1285,248 @@ export const questions: readonly Question[] = [
       "pmf(q)"
     ],
     correctIndex: 1
+  },
+  // ============================================================
+  // SESSION 6: Hypothesis Testing II — Comparing Groups (ids 106–125)
+  // ============================================================
+  {
+    id: 106,
+    session: 6,
+    question: "One-Way ANOVA tests the null hypothesis that:",
+    options: [
+      "All group variances are equal",
+      "All group means are equal",
+      "At least two group medians differ",
+      "The data is normally distributed"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 107,
+    session: 6,
+    question: "The F-statistic in ANOVA is calculated as:",
+    options: [
+      "SSW / SSG",
+      "MSG / MSW (between-group variance ÷ within-group variance)",
+      "MSW / MSG",
+      "SST / (n − 1)"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 108,
+    session: 6,
+    question: "Which Python function performs a One-Way ANOVA directly and returns (F-statistic, p-value)?",
+    options: [
+      "stats.ttest_ind(a, b, c)",
+      "stats.f_oneway(group1, group2, group3)",
+      "stats.kruskal(group1, group2, group3)",
+      "sm.stats.anova_lm(model)"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 109,
+    session: 6,
+    question: "In the OLS approach to ANOVA, what does df.melt() do?",
+    options: [
+      "Removes missing values from the DataFrame",
+      "Converts wide-format data (one column per group) to long format with 'group' and 'value' columns",
+      "Computes the mean of each group",
+      "Transposes the DataFrame"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 110,
+    session: 6,
+    question: "After a significant One-Way ANOVA result, which post-hoc test identifies which specific pairs of groups differ?",
+    options: [
+      "Shapiro-Wilk test",
+      "Tukey HSD (Honestly Significant Differences)",
+      "Levene's test",
+      "Kolmogorov-Smirnov test"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 111,
+    session: 6,
+    question: "In pairwise_tukeyhsd(endog, groups, alpha), what is the 'endog' parameter?",
+    options: [
+      "The group labels",
+      "The response variable (the values being compared)",
+      "The significance level",
+      "The number of groups"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 112,
+    session: 6,
+    question: "Which two assumptions of ANOVA can be checked statistically (as opposed to by experimental design)?",
+    options: [
+      "Independence and continuity",
+      "Normality of residuals and homogeneity of variances",
+      "Random sampling and large sample size",
+      "Equal group sizes and no outliers"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 113,
+    session: 6,
+    question: "The Shapiro-Wilk test checks ANOVA residuals for:",
+    options: [
+      "Equal variances across groups",
+      "Normality — H₀: residuals come from a normal distribution",
+      "Independence of observations",
+      "Whether group means are equal"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 114,
+    session: 6,
+    question: "Levene's test checks whether:",
+    options: [
+      "Residuals are normally distributed",
+      "The variances across groups are equal (homogeneity of variances)",
+      "At least one group mean is different",
+      "The data contains outliers"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 115,
+    session: 6,
+    question: "In Two-Way ANOVA, the formula 'Score ~ Treatment + Gender + Treatment:Gender' tests:",
+    options: [
+      "Only the effect of Treatment",
+      "Treatment effect, Gender effect, and their interaction effect",
+      "Only the interaction between Treatment and Gender",
+      "Whether Treatment and Gender are correlated"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 116,
+    session: 6,
+    question: "If the interaction term in Two-Way ANOVA has p > 0.05, this means:",
+    options: [
+      "Neither factor is significant",
+      "The interaction between the two factors is not statistically significant",
+      "Both factors must be removed from the model",
+      "The main effects are also not significant"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 117,
+    session: 6,
+    question: "When should you use the Kruskal-Wallis test instead of One-Way ANOVA?",
+    options: [
+      "When you have exactly two groups",
+      "When the data may not be normally distributed or ANOVA assumptions are violated",
+      "When all groups have equal sample sizes",
+      "When you want to test paired samples"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 118,
+    session: 6,
+    question: "The Kruskal-Wallis test is a non-parametric alternative that works with:",
+    options: [
+      "Means and standard deviations",
+      "Ranks of the data rather than raw values",
+      "Only normally distributed data",
+      "Paired observations"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 119,
+    session: 6,
+    question: "After a significant Kruskal-Wallis result, which post-hoc test is used?",
+    options: [
+      "Tukey HSD",
+      "Dunn's test (from scikit_posthocs)",
+      "Levene's test",
+      "Shapiro-Wilk test"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 120,
+    session: 6,
+    question: "The Chi-Square Test of Independence tests whether:",
+    options: [
+      "Two continuous variables are correlated",
+      "Two categorical variables are associated (not independent)",
+      "A sample mean equals a hypothesized value",
+      "Group variances are equal"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 121,
+    session: 6,
+    question: "In chi2_contingency(matrix, correction=False), what does correction=False do?",
+    options: [
+      "Disables the chi-square calculation entirely",
+      "Disables Yates' continuity correction (use for tables larger than 2×2 or when expected counts ≥ 5)",
+      "Forces p-value to be exactly 0.05",
+      "Applies Bonferroni correction"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 122,
+    session: 6,
+    question: "Yates' continuity correction should be applied when:",
+    options: [
+      "All contingency tables regardless of size",
+      "You have a 2×2 table with at least one expected count < 5",
+      "The chi-square statistic is larger than 10",
+      "You are testing more than two groups"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 123,
+    session: 6,
+    question: "A standardized residual greater than 2 (or less than −2) in a chi-square test indicates:",
+    options: [
+      "The overall test is not significant",
+      "That specific cell deviates significantly from its expected value",
+      "The data is normally distributed",
+      "Yates' correction is needed"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 124,
+    session: 6,
+    question: "The standardized residual formula in a chi-square test is:",
+    options: [
+      "(Expected − Observed) / Observed",
+      "(Observed − Expected) / √Expected",
+      "(Observed − Expected) / Expected",
+      "√(Observed − Expected)"
+    ],
+    correctIndex: 1
+  },
+  {
+    id: 125,
+    session: 6,
+    question: "You have 4 groups with small, unequal sample sizes and suspect non-normality. Which test should you use?",
+    options: [
+      "One-Way ANOVA with Tukey HSD",
+      "Kruskal-Wallis test with Dunn's post-hoc",
+      "Two-Way ANOVA",
+      "Chi-Square Test of Independence"
+    ],
+    correctIndex: 1
   }
 ] as const

@@ -1146,5 +1146,122 @@ export const sessions: readonly Session[] = [
         ]
       }
     ]
+  },
+  {
+    id: 6,
+    title: "Hypothesis Testing II — Comparing Groups",
+    topics: [
+      {
+        title: "One-Way ANOVA",
+        summary:
+          "Analysis of Variance (ANOVA) tests whether the means of three or more groups are equal. It compares between-group variability to within-group variability using the F-statistic. A significant result means at least one group mean differs — not that all differ.",
+        points: [
+          "H₀: μ₁ = μ₂ = ... = μₖ (all population means are equal)",
+          "H₁: Not all μᵢ are the same (at least one mean differs)",
+          "ANOVA decomposes total variance: SST = SSG (between groups) + SSW (within groups)",
+          "F-statistic = MSG / MSW = (SSG / (K-1)) / (SSW / (n-K)), where K = number of groups, n = total observations",
+          "F is always positive; reject H₀ if F is large (p-value < α)",
+          "Python Method 1: stats.f_oneway(group1, group2, group3) → returns F-statistic and p-value directly",
+          "Python Method 2: ols('value ~ group', data=df_melt).fit() then sm.stats.anova_lm(model) for full ANOVA table",
+          "df.melt(var_name='group', value_name='value') converts wide-format data to long format for OLS"
+        ],
+        tip: "ANOVA only tells you 'at least one differs' — it does NOT tell you which pairs differ. You must follow up with Tukey HSD for pairwise comparisons.",
+        important:
+          "ANOVA and OLS regression are mathematically equivalent when comparing group means. The ols function from statsmodels handles categorical variables automatically via dummy encoding.",
+        relatedTerms: ["F-statistic", "Tukey HSD", "SSG", "SSW", "MSW", "MSG"]
+      },
+      {
+        title: "ANOVA Assumptions",
+        summary:
+          "ANOVA is a parametric test with four key assumptions. If violated, consider data transformations or switch to Kruskal-Wallis.",
+        points: [
+          "Independence of observations — controlled by proper experimental design",
+          "Normality of residuals — check with Shapiro-Wilk test or Q-Q plot. Residual = observed - group mean",
+          "Homogeneity of variances (homoscedasticity) — check with Levene's test or residuals-vs-fitted plot",
+          "Dependent variable is continuous (interval or ratio scale)",
+          "Shapiro-Wilk: H₀ = data is normal. If p > 0.05, normality assumption is satisfied",
+          "Levene's test: H₀ = variances across groups are equal. If p > 0.05, equal variance assumption holds",
+          "stats.shapiro(residuals) for normality check",
+          "stats.levene(group1, group2, group3) for equal variance check"
+        ],
+        tip: "If ANOVA assumptions fail (especially normality), switch to the non-parametric Kruskal-Wallis test instead."
+      },
+      {
+        title: "Tukey HSD (Post-Hoc Test)",
+        summary:
+          "After a significant ANOVA result, Tukey Honestly Significant Differences identifies which specific pairs of groups differ.",
+        points: [
+          "Only perform Tukey HSD after ANOVA rejects H₀ — it is meaningless if ANOVA is non-significant",
+          "pairwise_tukeyhsd(endog=df['value'], groups=df['group'], alpha=0.05) from statsmodels",
+          "The summary table shows: group1, group2, meandiff, p-adj, lower, upper, reject",
+          "reject = True means that pair of groups has a statistically significant difference",
+          "tukeyhsd.plot_simultaneous() visualizes confidence intervals — non-overlapping intervals indicate significance",
+          "After Tukey, examine group means to determine the direction of differences (which group is higher/lower)"
+        ],
+        relatedTerms: ["ANOVA", "Post-hoc", "Pairwise Comparisons"]
+      },
+      {
+        title: "Two-Way ANOVA",
+        summary:
+          "Two-Way ANOVA evaluates the effect of two categorical factors (and their interaction) on a quantitative outcome simultaneously.",
+        points: [
+          "Tests three null hypotheses: (1) Factor A means are equal, (2) Factor B means are equal, (3) No interaction between A and B",
+          "Additive model (no interaction): ols('Score ~ Treatment + Gender', data=df)",
+          "With interaction term: ols('Score ~ Treatment + Gender + Treatment:Gender', data=df)",
+          "If interaction p-value > α: no significant interaction — interpret main effects independently",
+          "If interaction p-value < α: the effect of one factor depends on the level of the other factor",
+          "C(variable) explicitly marks a variable as categorical in the formula: ols('Score ~ C(Treatment) + C(Gender)')"
+        ],
+        tip: "Always check the interaction term first. If the interaction is significant, interpreting main effects alone can be misleading because the effect of one variable changes depending on the other."
+      },
+      {
+        title: "Kruskal-Wallis Test",
+        summary:
+          "The non-parametric alternative to one-way ANOVA for comparing 3+ groups when ANOVA assumptions (especially normality) are not met.",
+        points: [
+          "H₀: The population distributions of all groups are identical",
+          "H₁: At least one group's distribution differs",
+          "Uses ranks rather than raw values — robust to non-normality and outliers",
+          "stats.kruskal(group1, group2, group3, group4) → returns H-statistic and p-value",
+          "If significant, follow up with Dunn's post-hoc test: sp.posthoc_dunn(df, val_col='value', group_col='group', p_adjust='holm')",
+          "Compare medians (not means) when interpreting results — consistent with non-parametric approach",
+          "Useful for small samples, unequal group sizes, and ordinal data"
+        ],
+        tip: "Use when: small sample sizes, data fails normality tests, or group sizes are very unequal. Dunn's test is to Kruskal-Wallis what Tukey HSD is to ANOVA.",
+        relatedTerms: ["Non-parametric", "Dunn's Test", "Median", "Ranks"]
+      },
+      {
+        title: "Chi-Square Test of Independence",
+        summary:
+          "Tests whether two categorical variables are associated (dependent) or independent using a contingency table of observed vs expected frequencies.",
+        points: [
+          "H₀: No association exists between the two variables (they are independent)",
+          "H₁: An association exists between the two variables",
+          "chi2_contingency(matrix, correction=False) returns (chi², p-value, dof, expected frequencies)",
+          "Expected frequency for each cell = (row total × column total) / grand total",
+          "dof = (rows - 1) × (cols - 1)",
+          "Yates' correction (correction=True) adjusts for small expected counts in 2×2 tables — subtracts 0.5 from each |observed - expected|",
+          "After rejecting H₀, examine (observed - expected) differences to interpret the direction of association",
+          "Standardized residual = (observed - expected) / √expected — values > 2 or < -2 indicate significant individual cells"
+        ],
+        important:
+          "correction=False is the standard chi-square test. Only set correction=True for 2×2 tables with small expected counts (< 5). The exam typically uses correction=False.",
+        relatedTerms: ["Contingency Table", "Independence", "Standardized Residuals", "Expected Frequency"]
+      },
+      {
+        title: "Updated Decision Tree — Which Test to Use?",
+        summary:
+          "Complete decision tree for choosing the correct hypothesis test, now including multi-group tests from Session 6.",
+        points: [
+          "ONE sample → σ known: Z-test | σ unknown: t-test | Non-normal: Wilcoxon Signed-Rank",
+          "TWO samples (independent) → σ known: two-sample Z | σ unknown equal var: pooled t | unequal var: Welch t | non-normal: Mann-Whitney U",
+          "TWO samples (paired) → Normal: paired t-test (ttest_rel) | Non-normal: Wilcoxon Signed-Rank",
+          "THREE+ samples (independent) → Normal + equal var: One-Way ANOVA → Tukey HSD | Non-normal: Kruskal-Wallis → Dunn's test",
+          "THREE+ samples with 2 factors → Two-Way ANOVA (check interaction term)",
+          "TWO categorical variables → Chi-Square Test of Independence (contingency table)"
+        ],
+        tip: "Key question: Are the variables quantitative or categorical? Quantitative → ANOVA/Kruskal-Wallis. Categorical → Chi-Square."
+      }
+    ]
   }
 ] as const

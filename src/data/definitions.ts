@@ -520,6 +520,71 @@ export const definitions: readonly Definition[] = [
       "In discrete probability, the number of possible outcomes or values that a random variable can take.",
   },
   {
+    term: "ANOVA (Analysis of Variance)",
+    description:
+      "A parametric test that compares the means of three or more groups using the F-statistic. Decomposes total variability into between-group (SSG) and within-group (SSW) components. Requires normality, equal variances, and independence.",
+  },
+  {
+    term: "Chi-Square Test of Independence",
+    description:
+      "A hypothesis test that determines whether two categorical variables are associated by comparing observed frequencies in a contingency table to expected frequencies under independence. Uses chi2_contingency() in scipy.",
+  },
+  {
+    term: "Contingency Table",
+    description:
+      "A matrix showing the frequency distribution of two categorical variables. Each cell contains the count of observations falling into that combination of categories. Used in chi-square tests.",
+  },
+  {
+    term: "Dunn's Test",
+    description:
+      "A post-hoc pairwise comparison test used after a significant Kruskal-Wallis result to determine which specific groups differ. Uses Holm-Bonferroni correction for multiple comparisons. Found in scikit_posthocs.",
+  },
+  {
+    term: "F-statistic",
+    description:
+      "The test statistic for ANOVA, computed as MSG / MSW (mean square between groups divided by mean square within groups). Larger F values suggest greater differences between group means relative to within-group variability.",
+  },
+  {
+    term: "Kruskal-Wallis Test",
+    description:
+      "A non-parametric alternative to one-way ANOVA for comparing distributions of three or more independent groups. Uses ranks instead of raw values, making it robust to non-normality. Follow up with Dunn's test for pairwise comparisons.",
+  },
+  {
+    term: "Levene's Test",
+    description:
+      "A test for equality of variances across groups (homoscedasticity). H₀: variances are equal. Used to verify the ANOVA assumption of homogeneity of variances. stats.levene() in scipy.",
+  },
+  {
+    term: "Post-Hoc Test",
+    description:
+      "A follow-up analysis performed after a significant omnibus test (like ANOVA or Kruskal-Wallis) to determine which specific pairs of groups differ. Examples: Tukey HSD (parametric), Dunn's test (non-parametric).",
+  },
+  {
+    term: "Standardized Residual",
+    description:
+      "In chi-square tests, (observed - expected) / √expected for each cell. Values > 2 or < -2 indicate cells that contribute significantly to the overall chi-square statistic, helping interpret the direction of association.",
+  },
+  {
+    term: "SSG (Sum of Squares Between Groups)",
+    description:
+      "The variation between group means and the overall mean, weighted by group sizes: SSG = Σ nᵢ(x̄ᵢ − x̄)². Large SSG relative to SSW suggests group means differ.",
+  },
+  {
+    term: "SSW (Sum of Squares Within Groups)",
+    description:
+      "The variation of individual observations around their own group means: SSW = ΣΣ(xᵢⱼ − x̄ᵢ)². Represents random variation (noise) within groups.",
+  },
+  {
+    term: "Tukey HSD",
+    description:
+      "Tukey Honestly Significant Differences — a post-hoc test after ANOVA that performs all pairwise comparisons between group means while controlling for multiple comparisons. pairwise_tukeyhsd() in statsmodels.",
+  },
+  {
+    term: "Two-Way ANOVA",
+    description:
+      "Extends one-way ANOVA to evaluate the effect of two categorical factors and their interaction on a quantitative outcome. Tests three hypotheses: Factor A effect, Factor B effect, and A×B interaction.",
+  },
+  {
     term: "Variance",
     description:
       "A measure of dispersion that quantifies the average squared deviation of each data point from the mean. Population variance divides by n; sample variance uses n − 1 (Bessel's correction).",
@@ -533,6 +598,11 @@ export const definitions: readonly Definition[] = [
     term: "Wilcoxon Signed-Rank Test",
     description:
       "A non-parametric test for comparing two related (paired) samples by ranking the absolute differences between pairs and testing whether the median difference is zero.",
+  },
+  {
+    term: "Yates' Correction",
+    description:
+      "A continuity correction applied to 2×2 chi-square contingency tables by subtracting 0.5 from each |observed − expected|. Used when expected cell counts are small (< 5). Set correction=True in chi2_contingency().",
   },
   {
     term: "Z-Distribution",
