@@ -4,6 +4,7 @@ import ScrollToTop from './components/ScrollToTop'
 import Home from './pages/Home'
 import Topics from './pages/Topics'
 import Formulas from './pages/Formulas'
+import MockExam from './pages/MockExam'
 
 export default function App() {
   return (
@@ -18,6 +19,7 @@ export default function App() {
           <Route path="/definitions" element={<Navigate to="/topics?view=definitions" replace />} />
           <Route path="/snippets" element={<Navigate to="/formulas" replace />} />
           <Route path="/formulas" element={<Formulas />} />
+          <Route path="/mock" element={<MockExam />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>

@@ -1,9 +1,10 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, Calculator, ArrowRight } from 'lucide-react'
+import { BookOpen, Calculator, ClipboardCheck, ArrowRight } from 'lucide-react'
 import { sessions } from '../data/topics'
 import { definitions } from '../data/definitions'
 import { snippets } from '../data/snippets'
 import { formulaCount, templateCount } from '../data/formulas'
+import { mockSets } from '../data/mockSets'
 
 const cards = [
   {
@@ -21,6 +22,14 @@ const cards = [
     description: 'scipy.stats templates, mathematical formulas, and Python code snippets with gotchas',
     count: templateCount + formulaCount + snippets.length,
     unit: 'entries',
+  },
+  {
+    to: '/mock',
+    icon: ClipboardCheck,
+    title: 'Mock Exam',
+    description: 'Five full practice sets with answers, plus an offline code generator for every topic',
+    count: mockSets.reduce((sum, s) => sum + s.questions.length, 0),
+    unit: 'questions',
   },
 ] as const
 

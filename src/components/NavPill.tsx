@@ -3,12 +3,14 @@ import {
   Home,
   BookOpen,
   Calculator,
+  ClipboardCheck,
 } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/topics', label: 'Topics', icon: BookOpen },
   { to: '/formulas', label: 'Formulas', icon: Calculator },
+  { to: '/mock', label: 'Mock', icon: ClipboardCheck },
 ] as const
 
 export default function NavPill() {
