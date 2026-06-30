@@ -6,6 +6,7 @@ import {
   Terminal,
   Search,
   Calculator,
+  Code2,
 } from 'lucide-react'
 import {
   pythonTemplates,
@@ -15,8 +16,50 @@ import {
   type Formula,
   type FormulaCategory,
 } from '../data/formulas'
+import { snippets, type Snippet } from '../data/snippets'
 
-type Section = 'python' | 'math'
+type Section = 'python' | 'math' | 'snippets'
+
+const sessionBadgeColors: Record<number, string> = {
+  1: 'bg-s1/10 text-s1 border-s1/25',
+  2: 'bg-s2/10 text-s2 border-s2/25',
+  3: 'bg-s3/10 text-s3 border-s3/25',
+  4: 'bg-s4/10 text-s4 border-s4/25',
+  5: 'bg-s5/10 text-s5 border-s5/25',
+}
+
+function SnippetCard({ snippet }: { readonly snippet: Snippet }) {
+  return (
+    <div className="bg-surface border border-edge rounded-lg p-5 animate-fade-in">
+      <div className="flex items-start justify-between gap-3 mb-3">
+        <div>
+          <h3 className="font-semibold text-ink">{snippet.title}</h3>
+          {snippet.description && (
+            <p className="text-ink-secondary text-sm mt-1">{snippet.description}</p>
+          )}
+        </div>
+        <span
+          className={`flex-shrink-0 text-xs font-mono px-2 py-0.5 rounded-full border ${
+            sessionBadgeColors[snippet.session] ?? 'bg-surface text-ink-muted border-edge'
+          }`}
+        >
+          S{snippet.session}
+        </span>
+      </div>
+      <pre className="bg-base border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre">
+        {snippet.code}
+      </pre>
+    </div>
+  )
+}
+
+function matchesSnippetSearch(s: Snippet, q: string): boolean {
+  return (
+    s.title.toLowerCase().includes(q) ||
+    s.code.toLowerCase().includes(q) ||
+    (s.description?.toLowerCase().includes(q) ?? false)
+  )
+}
 
 // ─── Python Template Components ────────────────────────────────────────────
 
@@ -238,15 +281,20 @@ export default function Formulas() {
         .map(cat => ({ ...cat, formulas: cat.formulas.filter(f => matchesMathSearch(f, q)) }))
         .filter(cat => cat.formulas.length > 0)
 
+  const filteredSnippets = q === ''
+    ? snippets
+    : snippets.filter(s => matchesSnippetSearch(s, q))
+
   const templateTotal = filteredTemplates.reduce((s, c) => s + c.templates.length, 0)
   const formulaTotal = filteredFormulas.reduce((s, c) => s + c.formulas.length, 0)
-  const visibleTotal = section === 'python' ? templateTotal : formulaTotal
+  const snippetTotal = filteredSnippets.length
+  const visibleTotal = section === 'python' ? templateTotal : section === 'math' ? formulaTotal : snippetTotal
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-ink tracking-tight mb-2">Formula Sheet</h1>
+      <h1 className="text-3xl font-bold text-ink tracking-tight mb-2">Formula Sheet &amp; Snippets</h1>
       <p className="text-ink-muted mb-6">
-        Python templates and mathematical formulas with variable definitions and common gotchas.
+        Python templates, mathematical formulas, and ready-to-use code snippets with variable definitions and common gotchas.
       </p>
 
       <div className="flex items-center gap-2 mb-5">
@@ -272,6 +320,17 @@ export default function Formulas() {
           <Calculator size={15} />
           Math Formulas
         </button>
+        <button
+          onClick={() => setSection('snippets')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            section === 'snippets'
+              ? 'bg-glow-dim text-glow border border-glow/30 shadow-[0_0_12px_rgba(74,222,128,0.08)]'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <Code2 size={15} />
+          Snippets
+        </button>
       </div>
 
       <div className="relative mb-6">
@@ -282,7 +341,9 @@ export default function Formulas() {
           onChange={e => setSearch(e.target.value)}
           placeholder={section === 'python'
             ? 'Search templates... (e.g. ttest, norm, CI, shapiro)'
-            : 'Search formulas... (e.g. standard error, binomial, CI)'
+            : section === 'math'
+              ? 'Search formulas... (e.g. standard error, binomial, CI)'
+              : 'Search snippets... (e.g. numpy, pandas, plot)'
           }
           className="w-full pl-10 pr-4 py-2.5 bg-surface border border-edge rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-glow/40 focus:ring-1 focus:ring-glow/20 transition-all duration-150"
         />
@@ -314,6 +375,19 @@ export default function Formulas() {
           {filteredFormulas.length === 0 && (
             <div className="text-center py-12 text-ink-muted">
               <p className="text-sm">No formulas match "{search}"</p>
+            </div>
+          )}
+        </div>
+      )}
+
+      {section === 'snippets' && (
+        <div className="space-y-4 animate-fade-in">
+          {filteredSnippets.map(snippet => (
+            <SnippetCard key={snippet.id} snippet={snippet} />
+          ))}
+          {filteredSnippets.length === 0 && (
+            <div className="text-center py-12 text-ink-muted">
+              <p className="text-sm">No snippets match "{search}"</p>
             </div>
           )}
         </div>

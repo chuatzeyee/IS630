@@ -1,68 +1,25 @@
 import { Link } from 'react-router-dom'
-import { BookOpen, List, Code2, FlaskConical, GraduationCap, ClipboardCheck, Calculator, ArrowRight } from 'lucide-react'
+import { BookOpen, Calculator, ArrowRight } from 'lucide-react'
 import { sessions } from '../data/topics'
 import { definitions } from '../data/definitions'
 import { snippets } from '../data/snippets'
-import { questions } from '../data/questions'
-import { examQuestions } from '../data/midterm'
-import { mockQuestions } from '../data/mockExam'
 import { formulaCount, templateCount } from '../data/formulas'
 
 const cards = [
   {
     to: '/topics',
     icon: BookOpen,
-    title: 'Topics',
-    description: 'Key concepts organized by session with collapsible sections',
-    count: sessions.reduce((sum, s) => sum + s.topics.length, 0),
-    unit: 'topics',
-  },
-  {
-    to: '/definitions',
-    icon: List,
-    title: 'Definitions',
-    description: 'Searchable glossary of statistical terms and concepts',
-    count: definitions.length,
-    unit: 'terms',
-  },
-  {
-    to: '/snippets',
-    icon: Code2,
-    title: 'Snippets',
-    description: 'Python code snippets for common statistical operations',
-    count: snippets.length,
-    unit: 'snippets',
-  },
-  {
-    to: '/practice',
-    icon: FlaskConical,
-    title: 'Practice',
-    description: 'Interactive quiz with score tracking and session filters',
-    count: questions.length,
-    unit: 'questions',
-  },
-  {
-    to: '/midterm',
-    icon: GraduationCap,
-    title: 'Midterm Exam',
-    description: 'Scenario-based exam prep with code walkthroughs and a test-selection decision tree',
-    count: examQuestions.length,
-    unit: 'scenarios',
-  },
-  {
-    to: '/mock',
-    icon: ClipboardCheck,
-    title: 'Mock Exam',
-    description: 'Timed mock mid-term with MCQ, multi-select, and short answer sections',
-    count: mockQuestions.length,
-    unit: 'questions',
+    title: 'Topics & Definitions',
+    description: 'Key concepts organized by session, plus a searchable glossary of terms',
+    count: sessions.reduce((sum, s) => sum + s.topics.length, 0) + definitions.length,
+    unit: 'entries',
   },
   {
     to: '/formulas',
     icon: Calculator,
-    title: 'Formula Sheet',
-    description: 'scipy.stats Python templates and mathematical formulas with gotchas',
-    count: templateCount + formulaCount,
+    title: 'Formula Sheet & Snippets',
+    description: 'scipy.stats templates, mathematical formulas, and Python code snippets with gotchas',
+    count: templateCount + formulaCount + snippets.length,
     unit: 'entries',
   },
 ] as const

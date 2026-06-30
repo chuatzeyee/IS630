@@ -2,22 +2,12 @@ import { NavLink } from 'react-router-dom'
 import {
   Home,
   BookOpen,
-  List,
-  Code2,
-  FlaskConical,
-  GraduationCap,
-  ClipboardCheck,
   Calculator,
 } from 'lucide-react'
 
 const navItems = [
   { to: '/', label: 'Home', icon: Home },
   { to: '/topics', label: 'Topics', icon: BookOpen },
-  { to: '/definitions', label: 'Defs', icon: List },
-  { to: '/snippets', label: 'Snippets', icon: Code2 },
-  { to: '/practice', label: 'Practice', icon: FlaskConical },
-  { to: '/midterm', label: 'Midterm', icon: GraduationCap },
-  { to: '/mock', label: 'Mock', icon: ClipboardCheck },
   { to: '/formulas', label: 'Formulas', icon: Calculator },
 ] as const
 

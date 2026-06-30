@@ -1,8 +1,9 @@
-import { useState, useRef, useEffect } from 'react'
-import { Link } from 'react-router-dom'
-import { ChevronDown, Lightbulb, AlertTriangle, BookOpen } from 'lucide-react'
+import { useState, useRef, useEffect, useMemo } from 'react'
+import { Link, useSearchParams } from 'react-router-dom'
+import { ChevronDown, Lightbulb, AlertTriangle, BookOpen, Search, X } from 'lucide-react'
 import { sessions } from '../data/topics'
 import type { Topic } from '../data/topics'
+import { definitions } from '../data/definitions'
 
 function AnimatedPanel({ isOpen, children }: { readonly isOpen: boolean; readonly children: React.ReactNode }) {
   const ref = useRef<HTMLDivElement>(null)
@@ -35,7 +36,7 @@ function AnimatedPanel({ isOpen, children }: { readonly isOpen: boolean; readonl
 function TermPill({ term }: { readonly term: string }) {
   return (
     <Link
-      to={`/definitions?q=${encodeURIComponent(term)}`}
+      to={`/topics?view=definitions&q=${encodeURIComponent(term)}`}
       className="inline-flex items-center gap-1 px-2 py-0.5 text-xs font-mono bg-glow-dim/50 text-glow border border-glow/15 rounded hover:bg-glow-dim hover:border-glow/30 transition-colors"
     >
       <BookOpen size={10} />
@@ -116,7 +117,7 @@ function TopicCard({ topic, index }: { readonly topic: Topic; readonly index: nu
   )
 }
 
-export default function Topics() {
+function TopicsView() {
   const [activeSession, setActiveSession] = useState(1)
 
   const session = sessions.find((s) => s.id === activeSession)!
@@ -138,12 +139,7 @@ export default function Topics() {
   ]
 
   return (
-    <div className="max-w-4xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-ink mb-2 tracking-tight">Topics</h1>
-      <p className="text-ink-muted mb-6">
-        Key concepts organized by session. Tips and important callouts highlight what to remember for exams.
-      </p>
-
+    <div className="animate-fade-in">
       <div className="flex gap-2 mb-6 flex-wrap">
         {sessions.map((s) => (
           <button
@@ -173,6 +169,155 @@ export default function Topics() {
           <TopicCard key={topic.title} topic={topic} index={idx} />
         ))}
       </div>
+    </div>
+  )
+}
+
+function highlightText(text: string, query: string): React.ReactNode {
+  if (!query.trim()) return text
+  const regex = new RegExp(`(${query.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')})`, 'gi')
+  const parts = text.split(regex)
+  return parts.map((part, i) =>
+    regex.test(part) ? (
+      <mark key={i} className="highlight-match">{part}</mark>
+    ) : (
+      part
+    )
+  )
+}
+
+function DefinitionsView() {
+  const [searchParams] = useSearchParams()
+  const [query, setQuery] = useState(() => searchParams.get('q') ?? '')
+
+  useEffect(() => {
+    const q = searchParams.get('q')
+    if (q) setQuery(q)
+  }, [searchParams])
+
+  const filtered = useMemo(() => {
+    const lower = query.toLowerCase().trim()
+    if (!lower) return definitions
+    return definitions.filter(
+      (d) =>
+        d.term.toLowerCase().includes(lower) ||
+        d.description.toLowerCase().includes(lower)
+    )
+  }, [query])
+
+  return (
+    <div className="animate-fade-in">
+      <div className="relative mb-8 group">
+        <Search
+          size={18}
+          className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-muted group-focus-within:text-glow transition-colors"
+        />
+        <input
+          type="text"
+          placeholder="Search terms..."
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          className="w-full pl-10 pr-10 py-2.5 bg-raised border border-edge rounded-lg text-sm text-ink placeholder:text-ink-muted focus:outline-none focus:ring-1 focus:ring-glow/50 focus:border-glow/50 transition-all duration-200"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink transition-colors cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      <div className="flex items-center justify-between mb-4">
+        <span className="text-xs text-ink-faint font-mono">
+          {filtered.length} of {definitions.length} terms
+          {query && ` matching "${query}"`}
+        </span>
+      </div>
+
+      {filtered.length === 0 ? (
+        <div className="text-center py-16 animate-fade-in">
+          <p className="text-ink-muted mb-2">No matching terms found.</p>
+          <button
+            onClick={() => setQuery('')}
+            className="text-sm text-glow hover:text-glow-hover cursor-pointer transition-colors"
+          >
+            Clear search
+          </button>
+        </div>
+      ) : (
+        <div className="space-y-2">
+          {filtered.map((def, i) => (
+            <div
+              key={def.term}
+              className="bg-surface border border-edge rounded-lg px-5 py-4 hover:border-edge-bright hover:bg-raised/50 transition-all duration-150 animate-fade-in"
+              style={{ animationDelay: `${Math.min(i * 30, 300)}ms`, animationFillMode: 'both' }}
+            >
+              <dt className="text-sm font-semibold text-glow mb-1 font-mono">
+                {highlightText(def.term, query)}
+              </dt>
+              <dd className="text-sm text-ink-secondary leading-relaxed">
+                {highlightText(def.description, query)}
+              </dd>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+type View = 'topics' | 'definitions'
+
+export default function Topics() {
+  const [searchParams, setSearchParams] = useSearchParams()
+  const view: View = searchParams.get('view') === 'definitions' ? 'definitions' : 'topics'
+
+  const setView = (v: View) => {
+    const next = new URLSearchParams(searchParams)
+    if (v === 'topics') {
+      next.delete('view')
+      next.delete('q')
+    } else {
+      next.set('view', v)
+    }
+    setSearchParams(next)
+  }
+
+  return (
+    <div className="max-w-4xl mx-auto px-6 py-10">
+      <h1 className="text-3xl font-bold text-ink mb-2 tracking-tight">Topics &amp; Definitions</h1>
+      <p className="text-ink-muted mb-6">
+        Key concepts organized by session, plus a searchable glossary of terms.
+      </p>
+
+      <div className="flex items-center gap-2 mb-6">
+        <button
+          onClick={() => setView('topics')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            view === 'topics'
+              ? 'bg-glow-dim text-glow border border-glow/30 shadow-[0_0_12px_rgba(74,222,128,0.08)]'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <BookOpen size={15} />
+          Topics
+        </button>
+        <button
+          onClick={() => setView('definitions')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            view === 'definitions'
+              ? 'bg-glow-dim text-glow border border-glow/30 shadow-[0_0_12px_rgba(74,222,128,0.08)]'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <Search size={15} />
+          Definitions
+        </button>
+      </div>
+
+      {view === 'topics' ? <TopicsView /> : <DefinitionsView />}
     </div>
   )
 }
