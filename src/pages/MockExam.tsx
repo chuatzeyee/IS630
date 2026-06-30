@@ -1,8 +1,8 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, HelpCircle } from 'lucide-react'
+import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, HelpCircle, Code2 } from 'lucide-react'
 import { mockSets, type MockQuestion, type Section } from '../data/mockSets'
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
-import { examTemplates, examTemplateGroups, type ExamTemplate } from '../data/examTemplates'
+import { examTemplates, examTemplateGroups, templateForTopic, type ExamTemplate } from '../data/examTemplates'
 
 const sectionMeta: Record<Section, { label: string; color: string }> = {
   'A-mcq': { label: 'Section A - Multiple Choice (1 mark)', color: 'text-s1' },
@@ -12,9 +12,65 @@ const sectionMeta: Record<Section, { label: string; color: string }> = {
 }
 const sectionOrder: Section[] = ['A-mcq', 'A-msq', 'B-short', 'C-structured']
 
+// ─── Reusable parameterised template body (inputs + generated code) ──
+function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
+  const [vals, setVals] = useState<Record<string, string>>(
+    () => Object.fromEntries(tpl.fields.map((f) => [f.id, f.default]))
+  )
+  const [copied, setCopied] = useState(false)
+  const code = tpl.generate(vals)
+  const copy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+  return (
+    <div className="space-y-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        {tpl.fields.map((f) => (
+          <label key={f.id} className="block">
+            <span className="text-xs text-ink-secondary font-medium">{f.label}</span>
+            {f.help && <span className="text-[10px] text-ink-faint ml-1.5">({f.help})</span>}
+            {f.type === 'select' ? (
+              <select
+                value={vals[f.id]}
+                onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
+                className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink focus:outline-none focus:border-glow/40 cursor-pointer"
+              >
+                {f.options!.map((o) => <option key={o} value={o}>{o}</option>)}
+              </select>
+            ) : (
+              <input
+                type={f.type}
+                step="any"
+                value={vals[f.id]}
+                onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
+                className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink font-mono placeholder:text-ink-faint focus:outline-none focus:border-glow/40"
+              />
+            )}
+          </label>
+        ))}
+      </div>
+      <div className="relative">
+        <button
+          onClick={copy}
+          className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-mono text-ink-muted hover:text-glow bg-surface/80 px-2 py-1 rounded border border-edge cursor-pointer transition-colors"
+        >
+          {copied ? <Check size={11} /> : <Copy size={11} />}
+          {copied ? 'Copied' : 'Copy'}
+        </button>
+        <pre className="bg-void border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
+      </div>
+    </div>
+  )
+}
+
 // ─── Exam question card ────────────────────────────────────────────
 function QuestionCard({ q }: { readonly q: MockQuestion }) {
   const [show, setShow] = useState(false)
+  const [showCode, setShowCode] = useState(false)
+  const tpl = templateForTopic(q.topic)
   return (
     <div className="bg-surface border border-edge rounded-lg p-5">
       <div className="flex items-start gap-3">
@@ -34,13 +90,33 @@ function QuestionCard({ q }: { readonly q: MockQuestion }) {
         <span className="flex-shrink-0 text-[10px] font-mono text-ink-faint">{q.marks} mk</span>
       </div>
 
-      <button
-        onClick={() => setShow((s) => !s)}
-        className="mt-4 flex items-center gap-1.5 text-xs text-glow hover:text-glow-hover cursor-pointer transition-colors"
-      >
-        {show ? <EyeOff size={13} /> : <Eye size={13} />}
-        {show ? 'Hide answer' : 'Show answer'}
-      </button>
+      <div className="mt-4 flex items-center gap-4">
+        <button
+          onClick={() => setShow((s) => !s)}
+          className="flex items-center gap-1.5 text-xs text-glow hover:text-glow-hover cursor-pointer transition-colors"
+        >
+          {show ? <EyeOff size={13} /> : <Eye size={13} />}
+          {show ? 'Hide answer' : 'Show answer'}
+        </button>
+        {tpl && (
+          <button
+            onClick={() => setShowCode((s) => !s)}
+            className="flex items-center gap-1.5 text-xs text-ink-muted hover:text-glow cursor-pointer transition-colors"
+          >
+            <Code2 size={13} />
+            {showCode ? 'Hide code generator' : 'Generate code'}
+          </button>
+        )}
+      </div>
+
+      {showCode && tpl && (
+        <div className="mt-3 px-3.5 py-3 rounded-lg bg-base border border-edge animate-fade-in">
+          <p className="text-[10px] font-mono text-ink-muted uppercase tracking-wider mb-2">
+            Code generator - {tpl.title}
+          </p>
+          <TemplateBody tpl={tpl} />
+        </div>
+      )}
 
       {show && (
         <div className="mt-3 space-y-2 animate-fade-in">
@@ -223,17 +299,6 @@ function GeneratorView() {
 // ─── By-question-type view ─────────────────────────────────────────
 function TemplateCard({ tpl }: { readonly tpl: ExamTemplate }) {
   const [open, setOpen] = useState(false)
-  const [vals, setVals] = useState<Record<string, string>>(
-    () => Object.fromEntries(tpl.fields.map((f) => [f.id, f.default]))
-  )
-  const [copied, setCopied] = useState(false)
-  const code = tpl.generate(vals)
-  const copy = () => {
-    navigator.clipboard.writeText(code).then(() => {
-      setCopied(true)
-      setTimeout(() => setCopied(false), 1500)
-    })
-  }
   return (
     <div className="bg-surface border border-edge rounded-lg overflow-hidden">
       <button
@@ -247,42 +312,8 @@ function TemplateCard({ tpl }: { readonly tpl: ExamTemplate }) {
         </div>
       </button>
       {open && (
-        <div className="border-t border-edge p-4 space-y-4 animate-fade-in">
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {tpl.fields.map((f) => (
-              <label key={f.id} className="block">
-                <span className="text-xs text-ink-secondary font-medium">{f.label}</span>
-                {f.help && <span className="text-[10px] text-ink-faint ml-1.5">({f.help})</span>}
-                {f.type === 'select' ? (
-                  <select
-                    value={vals[f.id]}
-                    onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
-                    className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink focus:outline-none focus:border-glow/40 cursor-pointer"
-                  >
-                    {f.options!.map((o) => <option key={o} value={o}>{o}</option>)}
-                  </select>
-                ) : (
-                  <input
-                    type={f.type}
-                    step="any"
-                    value={vals[f.id]}
-                    onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
-                    className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink font-mono placeholder:text-ink-faint focus:outline-none focus:border-glow/40"
-                  />
-                )}
-              </label>
-            ))}
-          </div>
-          <div className="relative">
-            <button
-              onClick={copy}
-              className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-mono text-ink-muted hover:text-glow bg-surface/80 px-2 py-1 rounded border border-edge cursor-pointer transition-colors"
-            >
-              {copied ? <Check size={11} /> : <Copy size={11} />}
-              {copied ? 'Copied' : 'Copy'}
-            </button>
-            <pre className="bg-void border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
-          </div>
+        <div className="border-t border-edge p-4 animate-fade-in">
+          <TemplateBody tpl={tpl} />
         </div>
       )}
     </div>

@@ -377,6 +377,29 @@ print("chi2 =", round(chi2, 3), " dof =", dof, " p =", round(p, 4))
     },
   },
   {
+    id: 't-corr',
+    group: 'Structured (full answer)',
+    title: 'Measure the relationship between two variables',
+    trigger: 'When it says: "is there a relationship / correlation between two numeric variables".',
+    fields: [
+      { id: 'x', label: 'x (comma-sep)', type: 'text', default: '1, 2, 3, 4, 5' },
+      { id: 'y', label: 'y (comma-sep)', type: 'text', default: '2, 4, 5, 4, 6' },
+      { id: 'kind', label: 'method', type: 'select', default: 'Pearson (linear)', options: ['Pearson (linear)', 'Spearman (monotonic / non-parametric)'] },
+    ],
+    generate: (v) => {
+      const fn = v.kind?.startsWith('Spearman') ? 'spearmanr' : 'pearsonr'
+      return `# Pearson = linear relationship; Spearman = monotonic (non-parametric, for ranks/non-normal)
+# r near +1/-1 = strong; r near 0 = no LINEAR relationship (non-linear may still exist)
+from scipy.stats import ${fn}
+x = [${n(v.x, '1,2,3')}]
+y = [${n(v.y, '1,2,3')}]
+r, p_value = ${fn}(x, y)
+print("r =", round(r, 3), " p =", round(p_value, 4))
+# Conclusion: r = ___ indicates a [weak/moderate/strong] [positive/negative] relationship;
+# p [< / >] 0.05 means it [is / is not] statistically significant.`
+    },
+  },
+  {
     id: 't-regression',
     group: 'Structured (full answer)',
     title: 'Interpret a regression output (no code)',
@@ -406,3 +429,28 @@ print("chi2 =", round(chi2, 3), " dof =", dof, " p =", round(p, 4))
 ]
 
 export const examTemplateGroups = [...new Set(examTemplates.map((t) => t.group))]
+
+const byId = (id: string) => examTemplates.find((t) => t.id === id)
+
+// Resolve a question's free-text topic to the most relevant code template.
+export function templateForTopic(topic: string): ExamTemplate | undefined {
+  const t = topic.toLowerCase()
+  const has = (...ks: string[]) => ks.some((k) => t.includes(k))
+
+  if (has('welch', 'two-sample', '2-sample')) return byId('t-2samp')
+  if (has('1-sample', 'one-sample')) return byId('t-1samp')
+  if (has('anova', 'tukey')) return byId('t-anova')
+  if (has('chi-square', 'chi square', 'chi2')) return byId('t-chi2')
+  if (has('correlation')) return byId('t-corr')
+  if (has('ols', 'regression')) return byId('t-regression')
+  if (has('confidence interval')) return byId('t-ci')
+  if (has('bayes', 'total probability')) return byId('t-bayes')
+  if (has('combination', 'permutation', 'counting')) return byId('t-comb')
+  if (has('binomial')) return byId('t-binom')
+  if (has('poisson')) return byId('t-poisson')
+  if (has('exponential')) return byId('t-expon')
+  if (has('normal', 'sampling distribution', 'central limit', 'standard error')) return byId('t-normal')
+  if (has('conditional probability')) return byId('t-bayes')
+  if (has('hypothesis testing', 'p-value')) return byId('t-1samp')
+  return undefined
+}
