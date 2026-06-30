@@ -1,7 +1,8 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check } from 'lucide-react'
+import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, HelpCircle } from 'lucide-react'
 import { mockSets, type MockQuestion, type Section } from '../data/mockSets'
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
+import { examTemplates, examTemplateGroups, type ExamTemplate } from '../data/examTemplates'
 
 const sectionMeta: Record<Section, { label: string; color: string }> = {
   'A-mcq': { label: 'Section A - Multiple Choice (1 mark)', color: 'text-s1' },
@@ -219,8 +220,103 @@ function GeneratorView() {
   )
 }
 
+// ─── By-question-type view ─────────────────────────────────────────
+function TemplateCard({ tpl }: { readonly tpl: ExamTemplate }) {
+  const [open, setOpen] = useState(false)
+  const [vals, setVals] = useState<Record<string, string>>(
+    () => Object.fromEntries(tpl.fields.map((f) => [f.id, f.default]))
+  )
+  const [copied, setCopied] = useState(false)
+  const code = tpl.generate(vals)
+  const copy = () => {
+    navigator.clipboard.writeText(code).then(() => {
+      setCopied(true)
+      setTimeout(() => setCopied(false), 1500)
+    })
+  }
+  return (
+    <div className="bg-surface border border-edge rounded-lg overflow-hidden">
+      <button
+        onClick={() => setOpen((o) => !o)}
+        className="w-full flex items-start gap-3 p-4 text-left hover:bg-raised transition-colors duration-150 cursor-pointer"
+      >
+        {open ? <ChevronDown size={15} className="text-glow shrink-0 mt-0.5" /> : <ChevronRight size={15} className="text-ink-muted shrink-0 mt-0.5" />}
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-semibold text-ink">{tpl.title}</h4>
+          <p className="text-xs text-ink-muted mt-0.5 italic">{tpl.trigger}</p>
+        </div>
+      </button>
+      {open && (
+        <div className="border-t border-edge p-4 space-y-4 animate-fade-in">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            {tpl.fields.map((f) => (
+              <label key={f.id} className="block">
+                <span className="text-xs text-ink-secondary font-medium">{f.label}</span>
+                {f.help && <span className="text-[10px] text-ink-faint ml-1.5">({f.help})</span>}
+                {f.type === 'select' ? (
+                  <select
+                    value={vals[f.id]}
+                    onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
+                    className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink focus:outline-none focus:border-glow/40 cursor-pointer"
+                  >
+                    {f.options!.map((o) => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                ) : (
+                  <input
+                    type={f.type}
+                    step="any"
+                    value={vals[f.id]}
+                    onChange={(e) => setVals((v) => ({ ...v, [f.id]: e.target.value }))}
+                    className="mt-1 w-full px-3 py-2 bg-base border border-edge rounded-lg text-sm text-ink font-mono placeholder:text-ink-faint focus:outline-none focus:border-glow/40"
+                  />
+                )}
+              </label>
+            ))}
+          </div>
+          <div className="relative">
+            <button
+              onClick={copy}
+              className="absolute top-2 right-2 flex items-center gap-1 text-[10px] font-mono text-ink-muted hover:text-glow bg-surface/80 px-2 py-1 rounded border border-edge cursor-pointer transition-colors"
+            >
+              {copied ? <Check size={11} /> : <Copy size={11} />}
+              {copied ? 'Copied' : 'Copy'}
+            </button>
+            <pre className="bg-void border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ByTypeView() {
+  return (
+    <div className="animate-fade-in">
+      <div className="px-4 py-3 mb-5 rounded-lg bg-glow-dim/20 border border-glow/15">
+        <p className="text-xs text-glow/90 leading-relaxed">
+          Match the wording of the question in front of you, fill in the values, and copy a complete answer
+          scaffold - test name, hypotheses, code, and a fill-in-the-blank conclusion. Built for Section B and C
+          under time pressure.
+        </p>
+      </div>
+      <div className="space-y-8">
+        {examTemplateGroups.map((group) => (
+          <section key={group}>
+            <h2 className="text-sm font-semibold text-ink mb-3">{group}</h2>
+            <div className="space-y-3">
+              {examTemplates.filter((t) => t.group === group).map((tpl) => (
+                <TemplateCard key={tpl.id} tpl={tpl} />
+              ))}
+            </div>
+          </section>
+        ))}
+      </div>
+    </div>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────
-type Tab = 'exam' | 'generator'
+type Tab = 'exam' | 'bytype' | 'generator'
 
 export default function MockExam() {
   const [tab, setTab] = useState<Tab>('exam')
@@ -246,6 +342,17 @@ export default function MockExam() {
           Practice Sets
         </button>
         <button
+          onClick={() => setTab('bytype')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            tab === 'bytype'
+              ? 'bg-glow-dim text-glow border border-glow/30'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <HelpCircle size={15} />
+          By Question Type
+        </button>
+        <button
           onClick={() => setTab('generator')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
             tab === 'generator'
@@ -258,7 +365,9 @@ export default function MockExam() {
         </button>
       </div>
 
-      {tab === 'exam' ? <ExamView /> : <GeneratorView />}
+      {tab === 'exam' && <ExamView />}
+      {tab === 'bytype' && <ByTypeView />}
+      {tab === 'generator' && <GeneratorView />}
     </div>
   )
 }
