@@ -69,6 +69,15 @@ function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
   )
 }
 
+// A solution is runnable if it's self-contained Python: has a print() and starts
+// with code (import/print/assignment/comment), and has no fill-in placeholders.
+function isRunnableSolution(sol: string): boolean {
+  if (!sol.includes('print(')) return false
+  if (sol.includes('___')) return false // fill-in-the-blank scaffold, not runnable
+  const first = sol.trimStart()
+  return /^(from |import |#|print\(|[a-zA-Z_]\w*\s*=)/.test(first)
+}
+
 // Break multi-part text so each "(a)", "(b)", ... part starts on its own line.
 function renderMultipart(text: string) {
   // insert a line break before any " (x) " part marker (not at the very start)
@@ -250,6 +259,7 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
             <div className="px-3.5 py-2.5 rounded-lg bg-base border border-edge">
               <span className="text-[10px] font-mono text-ink-muted uppercase tracking-wider">Solution</span>
               <pre className="text-xs text-ink-secondary mt-1 font-mono whitespace-pre-wrap leading-relaxed">{q.solution}</pre>
+              {isRunnableSolution(q.solution) && <CodeRunner code={q.solution} />}
             </div>
           )}
         </div>

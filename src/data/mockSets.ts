@@ -630,7 +630,7 @@ const SET2: MockSet = {
       marks: 6,
       prompt: 'A help desk receives calls as a Poisson process averaging 6 per hour. (a) Find P(exactly 4 calls in a 30-minute window). (b) Find P(at least 4 calls in 30 minutes). Report both to 4 decimal places.',
       answer: '(a) 0.1680  (b) 0.3528',
-      solution: 'Rate over 30 minutes = 6 * 0.5 = 3.\n(a) stats.poisson.pmf(4, 3) = 0.1680\n(b) P(X >= 4) = stats.poisson.sf(3, 3) = 0.3528',
+      solution: 'from scipy import stats\n# Rate over 30 minutes = 6 * 0.5 = 3\nmu = 3\nprint("(a)", round(stats.poisson.pmf(4, mu), 4))          # exactly 4\nprint("(b)", round(stats.poisson.sf(3, mu), 4))            # at least 4 = P(X >= 4)\n# (a) 0.168   (b) 0.3528',
       topic: 'Poisson distribution',
     },
     {
@@ -1059,7 +1059,7 @@ const SET3: MockSet = {
       marks: 6,
       prompt: 'Service times at a counter are exponential with mean 5 minutes. (a) Find P(service < 3 minutes). (b) Find P(service between 3 and 8 minutes). Report both to 4 decimal places.',
       answer: '(a) 0.4512  (b) 0.3469',
-      solution: 'scale = mean = 5.\n(a) stats.expon.cdf(3, scale=5) = 0.4512\n(b) stats.expon.cdf(8, scale=5) - stats.expon.cdf(3, scale=5) = 0.3469',
+      solution: 'from scipy import stats\n# scale = mean = 5\nprint("(a)", round(stats.expon.cdf(3, scale=5), 4))                                  # within 3\nprint("(b)", round(stats.expon.cdf(8, scale=5) - stats.expon.cdf(3, scale=5), 4))    # between 3 and 8\n# (a) 0.4512   (b) 0.3469',
       topic: 'Exponential distribution',
     },
     {
@@ -1089,7 +1089,7 @@ const SET3: MockSet = {
       marks: 6,
       prompt: 'Parts come from three suppliers: A supplies 50% with 2% defective, B supplies 30% with 3% defective, C supplies 20% with 5% defective. (a) Use the law of total probability to find P(a random part is defective). (b) Given a defective part, find P(it came from supplier C). Report both to 4 decimal places.',
       answer: '(a) 0.0290  (b) 0.3448',
-      solution: '(a) P(defect) = 0.5*0.02 + 0.3*0.03 + 0.2*0.05 = 0.0290\n(b) P(C | defect) = (0.2*0.05) / 0.0290 = 0.3448 (Bayes theorem).',
+      solution: '# (a) law of total probability; (b) Bayes theorem\nP_defect = 0.5*0.02 + 0.3*0.03 + 0.2*0.05\nprint("(a)", round(P_defect, 4))\nprint("(b)", round((0.2*0.05) / P_defect, 4))\n# (a) 0.029   (b) 0.3448',
       topic: 'Law of total probability / Bayes',
     },
     {
@@ -1483,7 +1483,7 @@ const SET4: MockSet = {
       marks: 6,
       prompt: 'Emails to a support inbox arrive as a Poisson process averaging 3 per day. (a) Find P(no emails on a given day). (b) Find P(at least 2 emails on a day). Report both to 4 decimal places.',
       answer: '(a) 0.0498  (b) 0.8009',
-      solution: '(a) stats.poisson.pmf(0, 3) = 0.0498\n(b) P(X >= 2) = stats.poisson.sf(1, 3) = 0.8009',
+      solution: 'from scipy import stats\nmu = 3\nprint("(a)", round(stats.poisson.pmf(0, mu), 4))     # none\nprint("(b)", round(stats.poisson.sf(1, mu), 4))       # at least 2 = P(X >= 2)\n# (a) 0.0498   (b) 0.8009',
       topic: 'Poisson distribution',
     },
     {
@@ -1912,7 +1912,7 @@ const SET5: MockSet = {
       marks: 6,
       prompt: 'Equipment failures occur as a Poisson process averaging 2 per week. (a) Find P(exactly 2 failures over a 2-week period). (b) Find P(at most 1 failure in a single week). Report both to 4 decimal places.',
       answer: '(a) 0.1465  (b) 0.4060',
-      solution: '(a) Rate over 2 weeks = 4, so stats.poisson.pmf(2, 4) = 0.1465\n(b) Rate over 1 week = 2, so stats.poisson.cdf(1, 2) = 0.4060',
+      solution: 'from scipy import stats\nprint("(a)", round(stats.poisson.pmf(2, 4), 4))    # rate over 2 weeks = 4; exactly 2\nprint("(b)", round(stats.poisson.cdf(1, 2), 4))    # rate over 1 week = 2; at most 1\n# (a) 0.1465   (b) 0.406',
       topic: 'Poisson distribution',
     },
     {
@@ -1942,7 +1942,7 @@ const SET5: MockSet = {
       marks: 6,
       prompt: 'Two urns are chosen with P(Urn1) = 0.3 and P(Urn2) = 0.7. P(red | Urn1) = 0.4 and P(red | Urn2) = 0.6. (a) Use the law of total probability to find P(red). (b) Given a red ball was drawn, find P(it came from Urn1). Report both to 4 decimal places.',
       answer: '(a) 0.5400  (b) 0.2222',
-      solution: '(a) P(red) = 0.3*0.4 + 0.7*0.6 = 0.5400\n(b) P(Urn1 | red) = (0.3*0.4) / 0.5400 = 0.2222 (Bayes theorem).',
+      solution: '# (a) law of total probability; (b) Bayes theorem\nP_red = 0.3*0.4 + 0.7*0.6\nprint("(a)", round(P_red, 4))\nprint("(b)", round((0.3*0.4) / P_red, 4))\n# (a) 0.54   (b) 0.2222',
       topic: 'Law of total probability / Bayes',
     },
     {
