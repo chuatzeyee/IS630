@@ -78,22 +78,27 @@ interface QuestionCardProps {
 function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) {
   const [show, setShow] = useState(false)
   const [showCode, setShowCode] = useState(false)
+  const [checked, setChecked] = useState(false) // local auto-check (independent of global submit)
   const tpl = templateForTopic(q.topic)
   const gradable = isGradable(q)
   const isMulti = q.section === 'A-msq'
-  const verdict = submitted && gradable ? gradeAnswer(q, response) : null
+  // graded (locked) once the user checks this question OR the whole set is submitted
+  const graded = gradable && (checked || submitted)
+  const verdict = graded ? gradeAnswer(q, response) : null
 
   // toggle a letter for MCQ (single) / MSQ (multi)
   const optionLetter = (opt: string) => opt.trim().charAt(0).toUpperCase()
   const selected = new Set(response.toUpperCase().replace(/[^A-D]/g, '').split(''))
   const toggle = (letter: string) => {
-    if (submitted) return
+    if (graded || submitted) return
     if (isMulti) {
       const next = new Set(selected)
       next.has(letter) ? next.delete(letter) : next.add(letter)
       onRespond([...next].sort().join(', '))
     } else {
+      // single-choice MCQ: record the answer AND auto-check immediately
       onRespond(letter)
+      setChecked(true)
     }
   }
 
@@ -111,32 +116,44 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
 
           {/* Selectable options for MCQ / MSQ */}
           {q.options && (
-            <ul className="mt-3 space-y-1.5">
-              {q.options.map((opt) => {
-                const letter = optionLetter(opt)
-                const isSel = selected.has(letter)
-                const isCorrect = submitted && new Set(q.answer.toUpperCase().replace(/[^A-D]/g, '').split('')).has(letter)
-                let cls = 'border-edge text-ink-secondary hover:bg-raised'
-                if (submitted) {
-                  if (isCorrect) cls = 'border-green-500/50 bg-green-500/10 text-ink'
-                  else if (isSel) cls = 'border-red-500/50 bg-red-500/10 text-ink'
-                  else cls = 'border-edge text-ink-muted'
-                } else if (isSel) {
-                  cls = 'border-glow/50 bg-glow-dim text-ink'
-                }
-                return (
-                  <li key={opt}>
-                    <button
-                      disabled={submitted}
-                      onClick={() => toggle(letter)}
-                      className={`w-full text-left text-sm px-3 py-2 rounded-lg border transition-colors duration-150 ${submitted ? '' : 'cursor-pointer'} ${cls}`}
-                    >
-                      {opt}
-                    </button>
-                  </li>
-                )
-              })}
-            </ul>
+            <>
+              <ul className="mt-3 space-y-1.5">
+                {q.options.map((opt) => {
+                  const letter = optionLetter(opt)
+                  const isSel = selected.has(letter)
+                  const isCorrect = graded && new Set(q.answer.toUpperCase().replace(/[^A-D]/g, '').split('')).has(letter)
+                  let cls = 'border-edge text-ink-secondary hover:bg-raised'
+                  if (graded) {
+                    if (isCorrect) cls = 'border-green-500/50 bg-green-500/10 text-ink'
+                    else if (isSel) cls = 'border-red-500/50 bg-red-500/10 text-ink'
+                    else cls = 'border-edge text-ink-muted'
+                  } else if (isSel) {
+                    cls = 'border-glow/50 bg-glow-dim text-ink'
+                  }
+                  return (
+                    <li key={opt}>
+                      <button
+                        disabled={graded}
+                        onClick={() => toggle(letter)}
+                        className={`w-full text-left text-sm px-3 py-2 rounded-lg border transition-colors duration-150 ${graded ? '' : 'cursor-pointer'} ${cls}`}
+                      >
+                        {opt}
+                      </button>
+                    </li>
+                  )
+                })}
+              </ul>
+              {/* multi-select needs an explicit check (selection is built up first) */}
+              {isMulti && !graded && (
+                <button
+                  onClick={() => setChecked(true)}
+                  disabled={selected.size === 0}
+                  className="mt-2 text-xs px-3 py-1.5 rounded-lg bg-glow-dim text-glow border border-glow/30 cursor-pointer hover:bg-glow/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Check answer
+                </button>
+              )}
+            </>
           )}
 
           {/* Numeric input for gradable short answers */}
@@ -146,11 +163,21 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
                 type="text"
                 inputMode="decimal"
                 value={response}
-                disabled={submitted}
+                disabled={graded}
                 onChange={(e) => onRespond(e.target.value)}
+                onKeyDown={(e) => { if (e.key === 'Enter' && response.trim()) setChecked(true) }}
                 placeholder="Your answer"
                 className={`w-40 px-3 py-2 bg-base border rounded-lg text-sm text-ink font-mono focus:outline-none focus:border-glow/40 ${borderClass}`}
               />
+              {!graded && (
+                <button
+                  onClick={() => setChecked(true)}
+                  disabled={response.trim() === ''}
+                  className="text-xs px-3 py-1.5 rounded-lg bg-glow-dim text-glow border border-glow/30 cursor-pointer hover:bg-glow/15 disabled:opacity-40 disabled:cursor-not-allowed transition-colors"
+                >
+                  Check
+                </button>
+              )}
               {verdict === true && <Check size={16} className="text-green-500" />}
               {verdict === false && <X size={16} className="text-red-500" />}
             </div>
@@ -179,6 +206,14 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
         {verdict === true && <span className="text-xs font-medium text-green-500">Correct (+{q.marks} mk)</span>}
         {verdict === false && <span className="text-xs font-medium text-red-500">Incorrect</span>}
         {submitted && !gradable && <span className="text-xs text-ink-faint">Self-mark (see answer)</span>}
+        {checked && !submitted && (
+          <button
+            onClick={() => { setChecked(false); onRespond('') }}
+            className="text-xs text-ink-muted hover:text-glow cursor-pointer transition-colors"
+          >
+            Try again
+          </button>
+        )}
       </div>
 
       {showCode && tpl && (
