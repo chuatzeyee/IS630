@@ -30,10 +30,13 @@ function setState(next: PyState) {
 
 const REQUIRED_PACKAGES = ['numpy', 'scipy', 'pandas', 'statsmodels']
 
-// Base URL respects Vite's base (e.g. /IS630/) so it works on the deployed subpath.
+// Resolve the pyodide folder to an ABSOLUTE URL anchored at the page location.
+// Anchoring to document.baseURI makes it work both on the '/IS630/' deploy and on
+// an offline relative ('./') build served from any folder/port (dynamic import of
+// a relative path would otherwise resolve against the JS chunk, not the page).
 function pyodideBaseUrl(): string {
   const base = import.meta.env.BASE_URL || '/'
-  return `${base}pyodide/`
+  return new URL(`${base}pyodide/`, document.baseURI).href
 }
 
 export async function initPyodide(): Promise<PyodideInterface> {
