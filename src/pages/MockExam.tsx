@@ -4,6 +4,7 @@ import { mockSets, isGradable, gradeAnswer, type MockQuestion, type Section } fr
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
 import { examTemplates, examTemplateGroups, templateForTopic, type ExamTemplate } from '../data/examTemplates'
 import { useAttempts } from '../hooks/useAttempts'
+import CodeRunner from '../components/CodeRunner'
 
 const sectionMeta: Record<Section, { label: string; color: string }> = {
   'A-mcq': { label: 'Section A - Multiple Choice (1 mark)', color: 'text-s1' },
@@ -63,6 +64,7 @@ function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
         </button>
         <pre className="bg-void border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
       </div>
+      <CodeRunner code={code} />
     </div>
   )
 }
@@ -467,6 +469,7 @@ function GeneratorCard({ gen }: { readonly gen: CodeGen }) {
             </button>
             <pre className="bg-void border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre leading-relaxed">{code}</pre>
           </div>
+          <CodeRunner code={code} />
         </div>
       )}
     </div>

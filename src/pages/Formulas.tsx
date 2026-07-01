@@ -17,6 +17,7 @@ import {
   type FormulaCategory,
 } from '../data/formulas'
 import { snippets, type Snippet } from '../data/snippets'
+import CodeRunner from '../components/CodeRunner'
 
 type Section = 'python' | 'math' | 'snippets'
 
@@ -49,6 +50,7 @@ function SnippetCard({ snippet }: { readonly snippet: Snippet }) {
       <pre className="bg-base border border-edge rounded-lg p-4 text-sm font-mono text-glow/90 overflow-x-auto whitespace-pre">
         {snippet.code}
       </pre>
+      <CodeRunner code={snippet.code} />
     </div>
   )
 }
