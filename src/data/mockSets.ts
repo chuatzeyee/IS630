@@ -4,6 +4,13 @@
 
 export type Section = 'A-mcq' | 'A-msq' | 'B-short' | 'C-structured'
 
+// Optional per-question code-generator binding: which template to open for this
+// question and the field values pre-filled from the question's own numbers.
+export interface QuestionGen {
+  readonly templateId: string
+  readonly values: Readonly<Record<string, string>>
+}
+
 export interface MockQuestion {
   readonly id: string
   readonly section: Section
@@ -14,6 +21,7 @@ export interface MockQuestion {
   readonly answer: string // letter(s) for MCQ/MSQ, or numeric/text answer
   readonly solution?: string // working / code / explanation
   readonly topic: string
+  readonly gen?: QuestionGen // pre-filled code generator for this question
 }
 
 export interface MockSet {
@@ -162,31 +170,31 @@ const SET0: MockSet = {
     },
     // ── Section B: Short ──
     {
-      id: 's0q16', section: 'B-short', number: 16, marks: 1, topic: 'Binomial',
+      id: 's0q16', gen: { templateId: 't-binom', values: { n: '16', p: '0.25', k: '6', kind: 'exactly k', dp: '3' } }, section: 'B-short', number: 16, marks: 1, topic: 'Binomial',
       prompt: 'X follows a binomial distribution with mean = 4 and variance = 3. What is the probability of getting exactly six successes (to 3 d.p.)?',
       answer: '0.110',
       solution: 'from scipy import stats\n# np = 4, npq = 3 -> q = 3/4, p = 1/4, n = 16\nprint(round(stats.binom.pmf(6, 16, 0.25), 3))\n# 0.110',
     },
     {
-      id: 's0q17', section: 'B-short', number: 17, marks: 2, topic: 'Exponential',
+      id: 's0q17', gen: { templateId: 't-expon', values: { mean: '10', x: '10', x2: '15', kind: 'between t and t2' } }, section: 'B-short', number: 17, marks: 2, topic: 'Exponential',
       prompt: 'A call center receives a new call every 10 minutes on average. After a customer calls, what is the probability that a new customer calls within 10 to 15 minutes (to 3 d.p.)?',
       answer: '0.145',
       solution: 'from scipy import stats\n# Exponential inter-arrival, scale = 10\nprint(round(stats.expon.cdf(15, scale=10) - stats.expon.cdf(10, scale=10), 3))\n# 0.145',
     },
     {
-      id: 's0q18', section: 'B-short', number: 18, marks: 2, topic: 'Exponential',
+      id: 's0q18', gen: { templateId: 't-expon', values: { mean: '12.5', x: '20', x2: '25', kind: 'longer than t (>=)' } }, section: 'B-short', number: 18, marks: 2, topic: 'Exponential',
       prompt: 'The interval X seconds between two cyclists passing a point follows an exponential distribution with lambda = 0.08 cyclists/second. Probability that the interval between the next two cyclists is longer than 20 seconds (to 3 d.p.)?',
       answer: '0.202',
       solution: 'from scipy import stats\n# scale = 1/lambda = 1/0.08\nprint(round(stats.expon.sf(20, scale=1/0.08), 3))\n# 0.202',
     },
     {
-      id: 's0q19', section: 'B-short', number: 19, marks: 1, topic: 'Conditional probability (table)',
+      id: 's0q19', gen: { templateId: 't-cond-table', values: { favourable: '25', total: '1000' } }, section: 'B-short', number: 19, marks: 1, topic: 'Conditional probability (table)',
       prompt: '1000 employees. Male-Skilled: 350 satisfied / 150 unsatisfied; Male-Unskilled: 150 / 100; Female-Skilled: 25 / 75; Female-Unskilled: 100 / 50. Calculate the probability that the employee is a skilled female AND satisfied (to 3 d.p.).',
       answer: '0.025',
       solution: 'Read from the table: skilled female & satisfied = 25 out of 1000 = 25/1000 = 0.025.',
     },
     {
-      id: 's0q20', section: 'B-short', number: 20, marks: 1, topic: 'Conditional probability (table)',
+      id: 's0q20', gen: { templateId: 't-cond-table', values: { favourable: '250', total: '400' } }, section: 'B-short', number: 20, marks: 1, topic: 'Conditional probability (table)',
       prompt: 'Using the same worker-satisfaction table (1000 employees), calculate the probability that the employee is satisfied with work, GIVEN that the employee is an unskilled worker (to 3 d.p.).',
       answer: '0.625',
       solution: 'Unskilled satisfied = 150 (male) + 100 (female) = 250. Unskilled total = 250 + 150 = 400. P = 250/400 = 0.625.',
@@ -199,25 +207,25 @@ const SET0: MockSet = {
     },
     // ── Section C: Structured ──
     {
-      id: 's0q22', section: 'C-structured', number: 22, marks: 3, topic: 'Chi-square',
+      id: 's0q22', gen: { templateId: 't-chi2', values: { rows: '125, 1732; 8, 538; 6, 32; 10, 42; 12, 133; 7, 23' } }, section: 'C-structured', number: 22, marks: 3, topic: 'Chi-square',
       prompt: 'A researcher tests whether ethnic group is associated with place of residence (Rural vs Urban). Counts by ethnicity (Rural, Urban): A (125, 1732), B (8, 538), C (6, 32), D (10, 42), E (12, 133), F (7, 23). Use alpha = 5%. (a) chi2 statistic (3 d.p.) [1]. (b) degrees of freedom [1]. (c) expected count of Ethnic A in Rural, rounded up (1 mark) [1].',
       answer: '(a) chi2 = 58.463  (b) dof = 5  (c) 117',
       solution: 'from scipy.stats import chi2_contingency\nimport numpy as np\nimport math\n# rows = ethnic groups, cols = [Rural, Urban]\nmatrix = np.array([[125, 1732], [8, 538], [6, 32], [10, 42], [12, 133], [7, 23]])\nchi2, p, dof, expected = chi2_contingency(matrix, correction=False)\nprint("(a) chi2 =", round(chi2, 3))\nprint("(b) dof =", dof)\nprint("(c) expected A-Rural (round up) =", math.ceil(expected[0][0]))\n# (a) 58.463  (b) 5  (c) 117',
     },
     {
-      id: 's0q23', section: 'C-structured', number: 23, marks: 6, topic: 'One-sample t-test',
+      id: 's0q23', gen: { templateId: 't-1samp', values: { data: '1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440', mu: '1790', dir: 'less than V' } }, section: 'C-structured', number: 23, marks: 6, topic: 'One-sample t-test',
       prompt: 'The price of a phone at a chain store is $1790. 10 online-auction prices: 1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440. Assuming normality, at the 5% level test whether the average online price is LESS than $1790. (a) State the test and hypotheses [2]. (b) Show the code [2]. (c) Report the output and state the conclusion [2].',
       answer: 'One-sample (single-population) t-test. H0: mu >= 1790, H1: mu < 1790. Reject H0 (t = -3.716, p = 0.0024 < 0.05): sufficient evidence the average online price is less than $1790.',
       solution: "from scipy import stats\n# (a) One-sample t-test. H0: mu >= 1790, H1: mu < 1790\nsample = [1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440]\nt_stat, p_value = stats.ttest_1samp(sample, popmean=1790, alternative='less')\nprint(\"t =\", round(t_stat, 3), \" p =\", round(p_value, 4))\n# (b) code above.  Output: t = -3.716, p = 0.0024\n# (c) p < 0.05 -> reject H0. Sufficient evidence the average online price is less than $1790.",
     },
     {
-      id: 's0q24', section: 'C-structured', number: 24, marks: 4, topic: 'Confidence interval (z)',
+      id: 's0q24', gen: { templateId: 't-ci', values: { mode: 'summary, known var (z)', mean: '1500', sd: '200', nn: '60', data: '1,2,3', conf: '0.95' } }, section: 'C-structured', number: 24, marks: 4, topic: 'Confidence interval (z)',
       prompt: 'A random sample of 60 one-bedroom studios advertised on a property website has mean monthly rent $1500. Assume the population standard deviation is $200. (a) Construct a 95% confidence interval and show the code [2]. (b) State the interval [1]. (c) Can we use this CI to infer for ALL one-bedroom studios in the area? Justify [1].',
       answer: '(a)/(b) 95% CI = [1449.394, 1550.606]. (c) No - only for studios advertised on that website; the sample does not include listings from other sources, so it may not represent all studios in the area.',
       solution: 'from scipy import stats\nimport numpy as np\nmean, sigma, n_ = 1500, 200, 60\nalpha = 0.05\nlower = mean - stats.norm.ppf(1 - alpha/2) * sigma/np.sqrt(n_)\nupper = mean + stats.norm.ppf(1 - alpha/2) * sigma/np.sqrt(n_)\nprint(f"95% CI: [{lower:.3f}, {upper:.3f}]")\n# 95% CI: [1449.394, 1550.606]\n# (c) No - the sample is only from one website, so we can only conclude for studios listed there.',
     },
     {
-      id: 's0q25', section: 'C-structured', number: 25, marks: 6, topic: 'ANOVA + Tukey',
+      id: 's0q25', gen: { templateId: 't-anova', values: { g1: '9, 12, 14, 11, 13', g2: '8, 9, 6, 9, 10', g3: '12, 14, 11, 13, 11', g4: '9, 8, 10, 7, 8' } }, section: 'C-structured', number: 25, marks: 6, topic: 'ANOVA + Tukey',
       prompt: 'Four training programs, 5 trainees each, task completion time (mins). Prog1: 9,12,14,11,13; Prog2: 8,9,6,9,10; Prog3: 12,14,11,13,11; Prog4: 9,8,10,7,8. At 0.05 significance, determine whether mean time differs among the four programs, and if so which differ. (a) State the test and hypotheses [2]. (b) Complete analysis incl. post-hoc, with code, outputs and interpretation [4].',
       answer: 'ANOVA. H0: all program mean times equal; H1: at least one differs. F = 9.659, p = 0.000708 < 0.05 -> reject H0. Tukey: Prog1 differs from Prog2 & Prog4; Prog2 differs from Prog3; Prog3 differs from Prog4. Prog1~Prog3 and Prog2~Prog4 not different. Prog2 and Prog4 finish fastest (most effective).',
       solution: "from scipy import stats\nfrom statsmodels.stats.multicomp import pairwise_tukeyhsd\n# H0: all program means equal; H1: at least one differs\ndata = {'Prog1':[9,12,14,11,13], 'Prog2':[8,9,6,9,10], 'Prog3':[12,14,11,13,11], 'Prog4':[9,8,10,7,8]}\nprint(stats.f_oneway(*data.values()))   # F = 9.659, p = 0.000708\nvals, labels = [], []\nfor name, arr in data.items():\n    vals += arr; labels += [name]*len(arr)\nprint(pairwise_tukeyhsd(vals, labels, alpha=0.05))\n# p < 0.05 -> reject H0. Tukey: significant pairs are 1-2, 1-4, 2-3, 3-4 (reject=True);\n# 1-3 and 2-4 not significant. Means: Prog1 11.8, Prog2 8.4, Prog3 12.2, Prog4 8.4\n# -> Prog2 and Prog4 are most effective (fastest).",
@@ -242,19 +250,19 @@ const SET0: MockSet = {
     },
     // ── "Other Questions" bank (practice extras) ──
     {
-      id: 's0q29', section: 'C-structured', number: 29, marks: 4, topic: 'Welch two-sample t-test',
+      id: 's0q29', gen: { templateId: 't-2samp', values: { g1: '80, 75, 90, 60, 55, 78, 59, 88, 75, 90', g2: '98, 75, 89, 96, 77, 69, 80, 90, 74, 93', eqvar: 'No (Welch)', dir: 'different' } }, section: 'C-structured', number: 29, marks: 4, topic: 'Welch two-sample t-test',
       prompt: 'Achievement-test scores for two groups (one had a prior course, one did not). Group1: 80,75,90,60,55,78,59,88,75,90; Group2: 98,75,89,96,77,69,80,90,74,93. Assuming unequal population variances and alpha = 5%, do the two groups differ on average? Show code and conclusion.',
       answer: 'Welch two-sample t-test. H0: mu1 = mu2, H1: mu1 != mu2. t = -1.731, p = 0.1015 > 0.05 -> do NOT reject H0: insufficient evidence the two groups differ.',
       solution: "from scipy import stats\ng1 = [80,75,90,60,55,78,59,88,75,90]\ng2 = [98,75,89,96,77,69,80,90,74,93]\nt_stat, p_value = stats.ttest_ind(g1, g2, equal_var=False)\nprint(\"t =\", round(t_stat, 3), \" p =\", round(p_value, 4))\n# t = -1.731, p = 0.1015 > 0.05 -> fail to reject H0: no significant difference.",
     },
     {
-      id: 's0q30', section: 'B-short', number: 30, marks: 2, topic: 'Combinations',
+      id: 's0q30', gen: { templateId: 't-comb', values: { favN: '12', favR: '2', totN: '24', totR: '4' } }, section: 'B-short', number: 30, marks: 2, topic: 'Combinations',
       prompt: 'In a session with 12 couples (24 people), 4 people are selected at random. What is the probability that the selected people form exactly 2 couples (to 3 d.p.)?',
       answer: '0.006',
       solution: 'import math\n# choose 2 couples from 12, over choosing 4 people from 24\nprint(round(math.comb(12, 2) / math.comb(24, 4), 3))\n# 0.006',
     },
     {
-      id: 's0q31', section: 'B-short', number: 31, marks: 2, topic: 'Poisson',
+      id: 's0q31', gen: { templateId: 't-poisson', values: { rate: '1.5', interval: '10', k: '5', kind: 'exactly k' } }, section: 'B-short', number: 31, marks: 2, topic: 'Poisson',
       prompt: 'Incidents occur as a Poisson process with mean 1.5 per day. (a) Probability that the first ten days total exactly 5 incidents. (b) Probability that all 30 days total at least 30 incidents. Report (a) to 4 d.p.',
       answer: '(a) 0.0019  (b) 0.9927',
       solution: 'from scipy import stats\n# (a) lambda over 10 days = 15\nprint("(a)", round(stats.poisson.pmf(5, 10*1.5), 4))\n# (b) lambda over 30 days = 45; P(X >= 30) = sf(29)\nprint("(b)", round(stats.poisson.sf(29, 30*1.5), 4))\n# (a) 0.0019   (b) 0.9927',
@@ -386,25 +394,25 @@ const SET1: MockSet = {
     },
     // ── Section B: Short numeric ──
     {
-      id: 's1q13', section: 'B-short', number: 13, marks: 1, topic: 'Binomial',
+      id: 's1q13', gen: { templateId: 't-binom', values: { n: '16', p: '0.25', k: '6', kind: 'exactly k', dp: '3' } }, section: 'B-short', number: 13, marks: 1, topic: 'Binomial',
       prompt: 'X follows a binomial distribution with mean = 4 and variance = 3. Find P(X = 6) to 3 d.p.',
       answer: '0.110',
       solution: 'np = 4, npq = 3 -> q = 3/4, p = 1/4, n = 16.\nstats.binom.pmf(6, 16, 0.25) = 0.110',
     },
     {
-      id: 's1q14', section: 'B-short', number: 14, marks: 2, topic: 'Exponential',
+      id: 's1q14', gen: { templateId: 't-expon', values: { mean: '8', x: '5', x2: '10', kind: 'between t and t2' } }, section: 'B-short', number: 14, marks: 2, topic: 'Exponential',
       prompt: 'A help desk receives a ticket every 8 minutes on average. After a ticket arrives, find the probability the next ticket arrives within 5 to 10 minutes (3 d.p.).',
       answer: '0.249',
       solution: 'Exponential, scale = 8.\nstats.expon.cdf(10, scale=8) - stats.expon.cdf(5, scale=8) = 0.249',
     },
     {
-      id: 's1q15', section: 'B-short', number: 15, marks: 2, topic: 'Exponential (sf)',
+      id: 's1q15', gen: { templateId: 't-expon', values: { mean: '10', x: '15', x2: '20', kind: 'longer than t (>=)' } }, section: 'B-short', number: 15, marks: 2, topic: 'Exponential (sf)',
       prompt: 'Buses pass a stop following a Poisson process with lambda = 0.1 buses/minute. Find the probability the gap to the next bus exceeds 15 minutes (3 d.p.).',
       answer: '0.223',
       solution: 'scale = 1/0.1 = 10.\nstats.expon.sf(15, scale=10) = exp(-1.5) = 0.223',
     },
     {
-      id: 's1q16', section: 'B-short', number: 16, marks: 1, topic: 'Conditional probability (table)',
+      id: 's1q16', gen: { templateId: 't-cond-table', values: { favourable: '250', total: '400' } }, section: 'B-short', number: 16, marks: 1, topic: 'Conditional probability (table)',
       prompt: 'In a survey of 1000 people: 625 satisfied, 375 unsatisfied. Of the 400 unskilled workers, 250 are satisfied. Find P(satisfied | unskilled) to 3 d.p.',
       answer: '0.625',
       solution: 'Read from the table: 250/400 = 0.625.',
@@ -416,14 +424,14 @@ const SET1: MockSet = {
       solution: 'P(both approve) = 0.7 x 0.7 = 0.49. P(not published) = 1 - 0.49 = 0.51.',
     },
     {
-      id: 's1q18', section: 'B-short', number: 18, marks: 1, topic: 'Poisson',
+      id: 's1q18', gen: { templateId: 't-poisson', values: { rate: '2', interval: '1', k: '3', kind: 'exactly k' } }, section: 'B-short', number: 18, marks: 1, topic: 'Poisson',
       prompt: 'Accidents at a junction follow a Poisson distribution averaging 2 per month. Find the probability of exactly 3 accidents in a given month (3 d.p.).',
       answer: '0.180',
       solution: 'mu = 2. stats.poisson.pmf(3, 2) = 0.180',
     },
     // ── Section C: Structured ──
     {
-      id: 's1q19', section: 'C-structured', number: 19, marks: 6, topic: '1-sample t-test',
+      id: 's1q19', gen: { templateId: 't-1samp', values: { data: '3.5, 4.1, 2.9, 3.8, 4.0, 3.2, 4.5, 3.9, 3.1, 4.2, 3.7, 4.4', mu: '3', dir: 'greater than V' } }, section: 'C-structured', number: 19, marks: 6, topic: '1-sample t-test',
       prompt: 'A retailer claims the average delivery time is 3 days. A sample of 12 deliveries gives: 3.5, 4.1, 2.9, 3.8, 4.0, 3.2, 4.5, 3.9, 3.1, 4.2, 3.7, 4.4 days. At the 5% level, test whether the true average delivery time is GREATER than 3 days. (a) State the test and hypotheses [2]. (b) Show the code [2]. (c) State the conclusion [2].',
       answer: 'Reject H0; sufficient evidence that mean delivery time > 3 days (t ~ 5.23, p ~ 0.0001).',
       solution: `from scipy import stats
@@ -435,7 +443,7 @@ print("t =", round(t_stat, 3), " p =", round(p_value, 4))
 # (c) p < 0.05 -> reject H0. Sufficient evidence the average delivery time exceeds 3 days.`,
     },
     {
-      id: 's1q20', section: 'C-structured', number: 20, marks: 6, topic: 'Chi-square',
+      id: 's1q20', gen: { templateId: 't-chi2', values: { rows: '60, 40; 30, 70; 50, 50' } }, section: 'C-structured', number: 20, marks: 6, topic: 'Chi-square',
       prompt: 'A study records whether customers (Region North/South/East) prefer Product A or B. North: 60 A, 40 B; South: 30 A, 70 B; East: 50 A, 50 B. At 5% significance, test whether preference is associated with region. (a) Hypotheses + test [2]. (b) Code [2]. (c) dof and conclusion [2].',
       answer: 'Chi-square test of independence; dof = 2; reject H0 (chi2 ~ 18.75, p ~ 0.0001) — preference is associated with region.',
       solution: `from scipy.stats import chi2_contingency
@@ -448,7 +456,7 @@ print("chi2 =", round(chi2, 3), " dof =", dof, " p =", round(p, 4))
 # (c) dof = (3-1)(2-1) = 2. p < 0.05 -> reject H0: preference is associated with region.`,
     },
     {
-      id: 's1q21', section: 'C-structured', number: 21, marks: 8, topic: 'ANOVA + Tukey',
+      id: 's1q21', gen: { templateId: 't-anova', values: { g1: '20, 22, 19, 24, 21', g2: '28, 25, 30, 27, 26', g3: '21, 23, 20, 22, 24', g4: '' } }, section: 'C-structured', number: 21, marks: 8, topic: 'ANOVA + Tukey',
       prompt: 'Three fertilisers are tested on crop yield (kg): F1: 20, 22, 19, 24, 21; F2: 28, 25, 30, 27, 26; F3: 21, 23, 20, 22, 24. At 5% significance, determine whether mean yield differs, and if so which fertilisers differ. Show code, outputs and interpretation. [8]',
       answer: 'ANOVA F ~ 16.08, p ~ 0.0004 -> reject H0. Tukey: F2 differs from F1 and F3; F1 and F3 do not differ. F2 gives the highest mean yield.',
       solution: `from scipy import stats
@@ -659,7 +667,7 @@ const SET2: MockSet = {
       topic: 'ANOVA assumptions',
     },
     {
-      id: 's2q13',
+      id: 's2q13', gen: { templateId: 't-binom', values: { n: '12', p: '0.30', k: '4', kind: 'exactly k', dp: '4' } },
       section: 'B-short',
       number: 13,
       marks: 1,
@@ -669,7 +677,7 @@ const SET2: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's2q14',
+      id: 's2q14', gen: { templateId: 't-binom', values: { n: '10', p: '0.2', k: '3', kind: 'at least k', dp: '4' } },
       section: 'B-short',
       number: 14,
       marks: 2,
@@ -679,7 +687,7 @@ const SET2: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's2q15',
+      id: 's2q15', gen: { templateId: 't-poisson', values: { rate: '5', interval: '1', k: '7', kind: 'exactly k' } },
       section: 'B-short',
       number: 15,
       marks: 1,
@@ -689,7 +697,7 @@ const SET2: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's2q16',
+      id: 's2q16', gen: { templateId: 't-poisson', values: { rate: '3', interval: '1', k: '4', kind: 'more than k' } },
       section: 'B-short',
       number: 16,
       marks: 2,
@@ -699,7 +707,7 @@ const SET2: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's2q17',
+      id: 's2q17', gen: { templateId: 't-normal', values: { mu: '100', sd: '15', x: '120', x2: '130', pct: '0.90', kind: 'P(X <= x)' } },
       section: 'B-short',
       number: 17,
       marks: 1,
@@ -709,7 +717,7 @@ const SET2: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's2q18',
+      id: 's2q18', gen: { templateId: 't-normal', values: { mu: '100', sd: '15', x: '120', x2: '130', pct: '0.90', kind: 'cutoff at percentile' } },
       section: 'B-short',
       number: 18,
       marks: 2,
@@ -719,7 +727,7 @@ const SET2: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's2q19',
+      id: 's2q19', gen: { templateId: 't-expon', values: { mean: '4', x: '2', x2: '5', kind: 'within t (<=)' } },
       section: 'B-short',
       number: 19,
       marks: 2,
@@ -739,7 +747,7 @@ const SET2: MockSet = {
       topic: 'Combinations',
     },
     {
-      id: 's2q21',
+      id: 's2q21', gen: { templateId: 't-cond-table', values: { favourable: '0.12', total: '0.40' } },
       section: 'B-short',
       number: 21,
       marks: 2,
@@ -749,7 +757,7 @@ const SET2: MockSet = {
       topic: 'Conditional probability',
     },
     {
-      id: 's2q22',
+      id: 's2q22', gen: { templateId: 't-critical', values: { conf: '0.95', tail: 'two-sided', dist: 'z (known var)', df: '9' } },
       section: 'B-short',
       number: 22,
       marks: 1,
@@ -769,7 +777,7 @@ const SET2: MockSet = {
       topic: 'Standard error',
     },
     {
-      id: 's2q24',
+      id: 's2q24', gen: { templateId: 't-critical', values: { conf: '0.95', tail: 'two-sided', dist: 't (unknown var)', df: '15' } },
       section: 'B-short',
       number: 24,
       marks: 2,
@@ -779,7 +787,7 @@ const SET2: MockSet = {
       topic: 'Confidence intervals (t)',
     },
     {
-      id: 's2q25',
+      id: 's2q25', gen: { templateId: 't-1samp', values: { data: '52, 55, 49, 58, 60, 53, 57, 51', mu: '50', dir: 'different from V' } },
       section: 'B-short',
       number: 25,
       marks: 2,
@@ -799,7 +807,7 @@ const SET2: MockSet = {
       topic: 'Chi-square test',
     },
     {
-      id: 's2q27',
+      id: 's2q27', gen: { templateId: 't-2samp', values: { g1: '88, 92, 85, 90, 87, 91, 89', g2: '80, 83, 79, 85, 82, 78, 81', eqvar: 'No (Welch)', dir: 'different' } },
       section: 'C-structured',
       number: 27,
       marks: 6,
@@ -809,7 +817,7 @@ const SET2: MockSet = {
       topic: 'Welch two-sample t-test',
     },
     {
-      id: 's2q28',
+      id: 's2q28', gen: { templateId: 't-chi2', values: { rows: '30, 20, 10; 15, 25, 20' } },
       section: 'C-structured',
       number: 28,
       marks: 6,
@@ -819,7 +827,7 @@ const SET2: MockSet = {
       topic: 'Chi-square test of independence',
     },
     {
-      id: 's2q29',
+      id: 's2q29', gen: { templateId: 't-anova', values: { g1: '23, 25, 21, 24, 22', g2: '30, 28, 32, 29, 31', g3: '26, 27, 25, 28, 24', g4: '' } },
       section: 'C-structured',
       number: 29,
       marks: 6,
@@ -829,7 +837,7 @@ const SET2: MockSet = {
       topic: 'One-way ANOVA',
     },
     {
-      id: 's2q30',
+      id: 's2q30', gen: { templateId: 't-binom', values: { n: '20', p: '0.25', k: '5', kind: 'exactly k', dp: '3' } },
       section: 'C-structured',
       number: 30,
       marks: 4,
@@ -839,7 +847,7 @@ const SET2: MockSet = {
       topic: 'Binomial mean and variance',
     },
     {
-      id: 's2q31',
+      id: 's2q31', gen: { templateId: 't-poisson', values: { rate: '6', interval: '0.5', k: '4', kind: 'exactly k' } },
       section: 'C-structured',
       number: 31,
       marks: 6,
@@ -849,7 +857,7 @@ const SET2: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's2q32',
+      id: 's2q32', gen: { templateId: 't-corr', values: { x: '1, 2, 3, 4, 5, 6, 7, 8', y: '2.1, 3.9, 6.2, 7.8, 10.1, 12.0, 13.9, 16.2', kind: 'Pearson (linear)' } },
       section: 'C-structured',
       number: 32,
       marks: 8,
@@ -859,7 +867,7 @@ const SET2: MockSet = {
       topic: 'Linear regression',
     },
     {
-      id: 's2q33',
+      id: 's2q33', gen: { templateId: 't-ci', values: { mode: 'summary, known var (z)', mean: '50', sd: '8', nn: '100', data: '1,2,3', conf: '0.95' } },
       section: 'C-structured',
       number: 33,
       marks: 6,
@@ -869,7 +877,7 @@ const SET2: MockSet = {
       topic: 'Confidence interval (z)',
     },
     {
-      id: 's2q34',
+      id: 's2q34', gen: { templateId: 't-bayes', values: { bGivenA: '0.95', pA: '0.01', pB: '0.059' } },
       section: 'C-structured',
       number: 34,
       marks: 6,
@@ -1088,7 +1096,7 @@ const SET3: MockSet = {
       topic: 'Bayes theorem',
     },
     {
-      id: 's3q13',
+      id: 's3q13', gen: { templateId: 't-binom', values: { n: '16', p: '0.25', k: '6', kind: 'exactly k', dp: '4' } },
       section: 'B-short',
       number: 13,
       marks: 2,
@@ -1098,7 +1106,7 @@ const SET3: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's3q14',
+      id: 's3q14', gen: { templateId: 't-binom', values: { n: '8', p: '0.40', k: '2', kind: 'at most k', dp: '4' } },
       section: 'B-short',
       number: 14,
       marks: 2,
@@ -1108,7 +1116,7 @@ const SET3: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's3q15',
+      id: 's3q15', gen: { templateId: 't-poisson', values: { rate: '2.5', interval: '1', k: '3', kind: 'exactly k' } },
       section: 'B-short',
       number: 15,
       marks: 1,
@@ -1118,7 +1126,7 @@ const SET3: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's3q16',
+      id: 's3q16', gen: { templateId: 't-poisson', values: { rate: '4', interval: '1', k: '2', kind: 'at most k' } },
       section: 'B-short',
       number: 16,
       marks: 2,
@@ -1128,7 +1136,7 @@ const SET3: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's3q17',
+      id: 's3q17', gen: { templateId: 't-normal', values: { mu: '500', sd: '100', x: '650', x2: '700', pct: '0.90', kind: 'P(X >= x)' } },
       section: 'B-short',
       number: 17,
       marks: 2,
@@ -1138,7 +1146,7 @@ const SET3: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's3q18',
+      id: 's3q18', gen: { templateId: 't-normal', values: { mu: '500', sd: '100', x: '650', x2: '700', pct: '0.25', kind: 'cutoff at percentile' } },
       section: 'B-short',
       number: 18,
       marks: 2,
@@ -1148,7 +1156,7 @@ const SET3: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's3q19',
+      id: 's3q19', gen: { templateId: 't-expon', values: { mean: '10', x: '15', x2: '20', kind: 'longer than t (>=)' } },
       section: 'B-short',
       number: 19,
       marks: 2,
@@ -1168,7 +1176,7 @@ const SET3: MockSet = {
       topic: 'Combinations',
     },
     {
-      id: 's3q21',
+      id: 's3q21', gen: { templateId: 't-bayes', values: { bGivenA: '0.9', pA: '0.02', pB: '0.116' } },
       section: 'B-short',
       number: 21,
       marks: 2,
@@ -1178,7 +1186,7 @@ const SET3: MockSet = {
       topic: 'Bayes theorem',
     },
     {
-      id: 's3q22',
+      id: 's3q22', gen: { templateId: 't-critical', values: { conf: '0.99', tail: 'two-sided', dist: 'z (known var)', df: '9' } },
       section: 'B-short',
       number: 22,
       marks: 1,
@@ -1198,7 +1206,7 @@ const SET3: MockSet = {
       topic: 'Standard error',
     },
     {
-      id: 's3q24',
+      id: 's3q24', gen: { templateId: 't-critical', values: { conf: '0.90', tail: 'two-sided', dist: 't (unknown var)', df: '9' } },
       section: 'B-short',
       number: 24,
       marks: 2,
@@ -1208,7 +1216,7 @@ const SET3: MockSet = {
       topic: 'Confidence intervals (t)',
     },
     {
-      id: 's3q25',
+      id: 's3q25', gen: { templateId: 't-1samp', values: { data: '102, 98, 105, 110, 95, 108, 100, 103', mu: '100', dir: 'different from V' } },
       section: 'B-short',
       number: 25,
       marks: 2,
@@ -1228,7 +1236,7 @@ const SET3: MockSet = {
       topic: 'Chi-square expected counts',
     },
     {
-      id: 's3q27',
+      id: 's3q27', gen: { templateId: 't-2samp', values: { g1: '15.2, 14.8, 15.5, 15.0, 14.9, 15.3', g2: '14.0, 13.8, 14.2, 13.9, 14.1, 13.7', eqvar: 'No (Welch)', dir: 'different' } },
       section: 'C-structured',
       number: 27,
       marks: 6,
@@ -1238,7 +1246,7 @@ const SET3: MockSet = {
       topic: 'Welch two-sample t-test',
     },
     {
-      id: 's3q28',
+      id: 's3q28', gen: { templateId: 't-chi2', values: { rows: '40, 60; 35, 65' } },
       section: 'C-structured',
       number: 28,
       marks: 6,
@@ -1248,7 +1256,7 @@ const SET3: MockSet = {
       topic: 'Chi-square test of independence',
     },
     {
-      id: 's3q29',
+      id: 's3q29', gen: { templateId: 't-anova', values: { g1: '10, 12, 11, 13, 9', g2: '15, 17, 16, 14, 18', g3: '12, 11, 13, 10, 14', g4: '' } },
       section: 'C-structured',
       number: 29,
       marks: 6,
@@ -1258,7 +1266,7 @@ const SET3: MockSet = {
       topic: 'One-way ANOVA',
     },
     {
-      id: 's3q30',
+      id: 's3q30', gen: { templateId: 't-binom', values: { n: '50', p: '0.1', k: '3', kind: 'at most k', dp: '3' } },
       section: 'C-structured',
       number: 30,
       marks: 4,
@@ -1268,7 +1276,7 @@ const SET3: MockSet = {
       topic: 'Binomial mean and variance',
     },
     {
-      id: 's3q31',
+      id: 's3q31', gen: { templateId: 't-expon', values: { mean: '5', x: '3', x2: '8', kind: 'within t (<=)' } },
       section: 'C-structured',
       number: 31,
       marks: 6,
@@ -1278,7 +1286,7 @@ const SET3: MockSet = {
       topic: 'Exponential distribution',
     },
     {
-      id: 's3q32',
+      id: 's3q32', gen: { templateId: 't-corr', values: { x: '10, 20, 30, 40, 50, 60', y: '25, 42, 58, 79, 95, 113', kind: 'Pearson (linear)' } },
       section: 'C-structured',
       number: 32,
       marks: 8,
@@ -1288,7 +1296,7 @@ const SET3: MockSet = {
       topic: 'Linear regression',
     },
     {
-      id: 's3q33',
+      id: 's3q33', gen: { templateId: 't-ci', values: { mode: 'raw data (t)', mean: '50', sd: '8', nn: '100', data: '20, 22, 19, 24, 21, 23, 18, 25', conf: '0.95' } },
       section: 'C-structured',
       number: 33,
       marks: 6,
@@ -1298,7 +1306,7 @@ const SET3: MockSet = {
       topic: 'Confidence interval (t)',
     },
     {
-      id: 's3q34',
+      id: 's3q34', gen: { templateId: 't-bayes', values: { bGivenA: '0.05', pA: '0.20', pB: '0.029' } },
       section: 'C-structured',
       number: 34,
       marks: 6,
@@ -1512,7 +1520,7 @@ const SET4: MockSet = {
       topic: 'Chi-square assumptions',
     },
     {
-      id: 's4q13',
+      id: 's4q13', gen: { templateId: 't-binom', values: { n: '20', p: '0.3', k: '5', kind: 'exactly k', dp: '4' } },
       section: 'B-short',
       number: 13,
       marks: 2,
@@ -1522,7 +1530,7 @@ const SET4: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's4q14',
+      id: 's4q14', gen: { templateId: 't-binom', values: { n: '6', p: '0.15', k: '1', kind: 'at least k', dp: '4' } },
       section: 'B-short',
       number: 14,
       marks: 2,
@@ -1532,7 +1540,7 @@ const SET4: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's4q15',
+      id: 's4q15', gen: { templateId: 't-poisson', values: { rate: '1.5', interval: '1', k: '0', kind: 'exactly k' } },
       section: 'B-short',
       number: 15,
       marks: 1,
@@ -1542,7 +1550,7 @@ const SET4: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's4q16',
+      id: 's4q16', gen: { templateId: 't-poisson', values: { rate: '8', interval: '1', k: '10', kind: 'more than k' } },
       section: 'B-short',
       number: 16,
       marks: 2,
@@ -1552,7 +1560,7 @@ const SET4: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's4q17',
+      id: 's4q17', gen: { templateId: 't-normal', values: { mu: '70', sd: '5', x: '65', x2: '75', pct: '0.95', kind: 'P(x <= X <= x2)' } },
       section: 'B-short',
       number: 17,
       marks: 2,
@@ -1562,7 +1570,7 @@ const SET4: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's4q18',
+      id: 's4q18', gen: { templateId: 't-normal', values: { mu: '70', sd: '5', x: '65', x2: '75', pct: '0.95', kind: 'cutoff at percentile' } },
       section: 'B-short',
       number: 18,
       marks: 2,
@@ -1572,7 +1580,7 @@ const SET4: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's4q19',
+      id: 's4q19', gen: { templateId: 't-expon', values: { mean: '8', x: '5', x2: '10', kind: 'within t (<=)' } },
       section: 'B-short',
       number: 19,
       marks: 2,
@@ -1602,7 +1610,7 @@ const SET4: MockSet = {
       topic: 'Independent events',
     },
     {
-      id: 's4q22',
+      id: 's4q22', gen: { templateId: 't-critical', values: { conf: '0.90', tail: 'two-sided', dist: 'z (known var)', df: '9' } },
       section: 'B-short',
       number: 22,
       marks: 1,
@@ -1622,7 +1630,7 @@ const SET4: MockSet = {
       topic: 'Standard error',
     },
     {
-      id: 's4q24',
+      id: 's4q24', gen: { templateId: 't-critical', values: { conf: '0.99', tail: 'two-sided', dist: 't (unknown var)', df: '20' } },
       section: 'B-short',
       number: 24,
       marks: 2,
@@ -1632,7 +1640,7 @@ const SET4: MockSet = {
       topic: 'Confidence intervals (t)',
     },
     {
-      id: 's4q25',
+      id: 's4q25', gen: { templateId: 't-1samp', values: { data: '4.5, 4.8, 5.1, 4.2, 4.9, 5.0, 4.6, 4.7, 5.2, 4.4', mu: '4.5', dir: 'different from V' } },
       section: 'B-short',
       number: 25,
       marks: 2,
@@ -1652,7 +1660,7 @@ const SET4: MockSet = {
       topic: 'Probability rules',
     },
     {
-      id: 's4q27',
+      id: 's4q27', gen: { templateId: 't-2samp', values: { g1: '120, 118, 125, 122, 119, 121, 123', g2: '110, 112, 108, 115, 111, 109, 113', eqvar: 'No (Welch)', dir: 'different' } },
       section: 'C-structured',
       number: 27,
       marks: 6,
@@ -1662,7 +1670,7 @@ const SET4: MockSet = {
       topic: 'Welch two-sample t-test',
     },
     {
-      id: 's4q28',
+      id: 's4q28', gen: { templateId: 't-chi2', values: { rows: '50, 30; 20, 40; 35, 25' } },
       section: 'C-structured',
       number: 28,
       marks: 6,
@@ -1672,7 +1680,7 @@ const SET4: MockSet = {
       topic: 'Chi-square test of independence',
     },
     {
-      id: 's4q29',
+      id: 's4q29', gen: { templateId: 't-anova', values: { g1: '5, 6, 7, 5, 6', g2: '8, 9, 7, 8, 9', g3: '6, 5, 7, 6, 5', g4: '10, 11, 9, 10, 11' } },
       section: 'C-structured',
       number: 29,
       marks: 6,
@@ -1682,7 +1690,7 @@ const SET4: MockSet = {
       topic: 'One-way ANOVA',
     },
     {
-      id: 's4q30',
+      id: 's4q30', gen: { templateId: 't-binom', values: { n: '40', p: '0.2', k: '8', kind: 'more than k', dp: '3' } },
       section: 'C-structured',
       number: 30,
       marks: 4,
@@ -1692,7 +1700,7 @@ const SET4: MockSet = {
       topic: 'Binomial mean and variance',
     },
     {
-      id: 's4q31',
+      id: 's4q31', gen: { templateId: 't-poisson', values: { rate: '3', interval: '1', k: '0', kind: 'exactly k' } },
       section: 'C-structured',
       number: 31,
       marks: 6,
@@ -1702,7 +1710,7 @@ const SET4: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's4q32',
+      id: 's4q32', gen: { templateId: 't-corr', values: { x: '1, 2, 3, 4, 5, 6, 7', y: '3.0, 5.1, 6.9, 9.2, 10.8, 13.1, 15.0', kind: 'Pearson (linear)' } },
       section: 'C-structured',
       number: 32,
       marks: 8,
@@ -1712,7 +1720,7 @@ const SET4: MockSet = {
       topic: 'Linear regression',
     },
     {
-      id: 's4q33',
+      id: 's4q33', gen: { templateId: 't-ci', values: { mode: 'summary, known var (z)', mean: '200', sd: '25', nn: '50', data: '1,2,3', conf: '0.99' } },
       section: 'C-structured',
       number: 33,
       marks: 6,
@@ -1722,7 +1730,7 @@ const SET4: MockSet = {
       topic: 'Confidence interval (z)',
     },
     {
-      id: 's4q34',
+      id: 's4q34', gen: { templateId: 't-bayes', values: { bGivenA: '0.7', pA: '0.4', pB: '0.34' } },
       section: 'C-structured',
       number: 34,
       marks: 6,
@@ -1941,7 +1949,7 @@ const SET5: MockSet = {
       topic: 'OLS regression',
     },
     {
-      id: 's5q13',
+      id: 's5q13', gen: { templateId: 't-binom', values: { n: '9', p: '0.5', k: '3', kind: 'exactly k', dp: '4' } },
       section: 'B-short',
       number: 13,
       marks: 2,
@@ -1951,7 +1959,7 @@ const SET5: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's5q14',
+      id: 's5q14', gen: { templateId: 't-binom', values: { n: '15', p: '0.3', k: '4', kind: 'at most k', dp: '4' } },
       section: 'B-short',
       number: 14,
       marks: 2,
@@ -1961,7 +1969,7 @@ const SET5: MockSet = {
       topic: 'Binomial distribution',
     },
     {
-      id: 's5q15',
+      id: 's5q15', gen: { templateId: 't-poisson', values: { rate: '10', interval: '1', k: '12', kind: 'exactly k' } },
       section: 'B-short',
       number: 15,
       marks: 1,
@@ -1971,7 +1979,7 @@ const SET5: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's5q16',
+      id: 's5q16', gen: { templateId: 't-poisson', values: { rate: '6', interval: '1', k: '4', kind: 'at most k' } },
       section: 'B-short',
       number: 16,
       marks: 2,
@@ -1981,7 +1989,7 @@ const SET5: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's5q17',
+      id: 's5q17', gen: { templateId: 't-normal', values: { mu: '0', sd: '1', x: '-1.5', x2: '1', pct: '0.90', kind: 'P(X <= x)' } },
       section: 'B-short',
       number: 17,
       marks: 1,
@@ -1991,7 +1999,7 @@ const SET5: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's5q18',
+      id: 's5q18', gen: { templateId: 't-normal', values: { mu: '50', sd: '10', x: '60', x2: '70', pct: '0.99', kind: 'cutoff at percentile' } },
       section: 'B-short',
       number: 18,
       marks: 2,
@@ -2001,7 +2009,7 @@ const SET5: MockSet = {
       topic: 'Normal distribution',
     },
     {
-      id: 's5q19',
+      id: 's5q19', gen: { templateId: 't-expon', values: { mean: '2', x: '3', x2: '5', kind: 'longer than t (>=)' } },
       section: 'B-short',
       number: 19,
       marks: 2,
@@ -2021,7 +2029,7 @@ const SET5: MockSet = {
       topic: 'Combinations',
     },
     {
-      id: 's5q21',
+      id: 's5q21', gen: { templateId: 't-cond-table', values: { favourable: '0.35', total: '0.70' } },
       section: 'B-short',
       number: 21,
       marks: 2,
@@ -2031,7 +2039,7 @@ const SET5: MockSet = {
       topic: 'Conditional probability',
     },
     {
-      id: 's5q22',
+      id: 's5q22', gen: { templateId: 't-critical', values: { conf: '0.95', tail: 'one-sided', dist: 'z (known var)', df: '9' } },
       section: 'B-short',
       number: 22,
       marks: 1,
@@ -2051,7 +2059,7 @@ const SET5: MockSet = {
       topic: 'Standard error',
     },
     {
-      id: 's5q24',
+      id: 's5q24', gen: { templateId: 't-critical', values: { conf: '0.95', tail: 'two-sided', dist: 't (unknown var)', df: '24' } },
       section: 'B-short',
       number: 24,
       marks: 2,
@@ -2061,7 +2069,7 @@ const SET5: MockSet = {
       topic: 'Confidence intervals (t)',
     },
     {
-      id: 's5q25',
+      id: 's5q25', gen: { templateId: 't-1samp', values: { data: '210, 205, 198, 215, 220, 208, 212, 200, 218, 209', mu: '200', dir: 'different from V' } },
       section: 'B-short',
       number: 25,
       marks: 2,
@@ -2081,7 +2089,7 @@ const SET5: MockSet = {
       topic: 'p-value interpretation',
     },
     {
-      id: 's5q27',
+      id: 's5q27', gen: { templateId: 't-2samp', values: { g1: '7.2, 7.5, 7.1, 7.8, 7.4, 7.6, 7.3', g2: '6.5, 6.8, 6.2, 6.9, 6.6, 6.4, 6.7', eqvar: 'No (Welch)', dir: 'different' } },
       section: 'C-structured',
       number: 27,
       marks: 6,
@@ -2091,7 +2099,7 @@ const SET5: MockSet = {
       topic: 'Welch two-sample t-test',
     },
     {
-      id: 's5q28',
+      id: 's5q28', gen: { templateId: 't-chi2', values: { rows: '45, 55, 50; 40, 35, 25' } },
       section: 'C-structured',
       number: 28,
       marks: 6,
@@ -2101,7 +2109,7 @@ const SET5: MockSet = {
       topic: 'Chi-square test of independence',
     },
     {
-      id: 's5q29',
+      id: 's5q29', gen: { templateId: 't-anova', values: { g1: '100, 102, 98, 101, 99', g2: '110, 108, 112, 109, 111', g3: '105, 107, 103, 106, 104', g4: '' } },
       section: 'C-structured',
       number: 29,
       marks: 6,
@@ -2111,7 +2119,7 @@ const SET5: MockSet = {
       topic: 'One-way ANOVA',
     },
     {
-      id: 's5q30',
+      id: 's5q30', gen: { templateId: 't-binom', values: { n: '25', p: '0.4', k: '10', kind: 'at least k', dp: '3' } },
       section: 'C-structured',
       number: 30,
       marks: 4,
@@ -2121,7 +2129,7 @@ const SET5: MockSet = {
       topic: 'Binomial mean and variance',
     },
     {
-      id: 's5q31',
+      id: 's5q31', gen: { templateId: 't-poisson', values: { rate: '2', interval: '2', k: '2', kind: 'exactly k' } },
       section: 'C-structured',
       number: 31,
       marks: 6,
@@ -2131,7 +2139,7 @@ const SET5: MockSet = {
       topic: 'Poisson distribution',
     },
     {
-      id: 's5q32',
+      id: 's5q32', gen: { templateId: 't-corr', values: { x: '2, 4, 6, 8, 10, 12', y: '5, 8, 12, 15, 19, 22', kind: 'Pearson (linear)' } },
       section: 'C-structured',
       number: 32,
       marks: 8,
@@ -2141,7 +2149,7 @@ const SET5: MockSet = {
       topic: 'Linear regression',
     },
     {
-      id: 's5q33',
+      id: 's5q33', gen: { templateId: 't-ci', values: { mode: 'raw data (t)', mean: '50', sd: '8', nn: '100', data: '48, 52, 50, 55, 47, 53, 49, 51, 54, 46', conf: '0.95' } },
       section: 'C-structured',
       number: 33,
       marks: 6,
@@ -2151,7 +2159,7 @@ const SET5: MockSet = {
       topic: 'Confidence interval (t)',
     },
     {
-      id: 's5q34',
+      id: 's5q34', gen: { templateId: 't-bayes', values: { bGivenA: '0.4', pA: '0.3', pB: '0.54' } },
       section: 'C-structured',
       number: 34,
       marks: 6,

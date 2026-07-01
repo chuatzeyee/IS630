@@ -432,6 +432,10 @@ export const examTemplateGroups = [...new Set(examTemplates.map((t) => t.group))
 
 const byId = (id: string) => examTemplates.find((t) => t.id === id)
 
+export function templateById(id: string): ExamTemplate | undefined {
+  return byId(id)
+}
+
 // Resolve a question's free-text topic to the most relevant code template.
 export function templateForTopic(topic: string): ExamTemplate | undefined {
   const t = topic.toLowerCase()

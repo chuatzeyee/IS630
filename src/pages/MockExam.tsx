@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react'
 import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, X, HelpCircle, Code2, History } from 'lucide-react'
 import { mockSets, isGradable, gradeAnswer, type MockQuestion, type Section } from '../data/mockSets'
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
-import { examTemplates, examTemplateGroups, templateForTopic, type ExamTemplate } from '../data/examTemplates'
+import { examTemplates, examTemplateGroups, templateForTopic, templateById, type ExamTemplate } from '../data/examTemplates'
 import { useAttempts } from '../hooks/useAttempts'
 import CodeRunner from '../components/CodeRunner'
 
@@ -15,9 +15,9 @@ const sectionMeta: Record<Section, { label: string; color: string }> = {
 const sectionOrder: Section[] = ['A-mcq', 'A-msq', 'B-short', 'C-structured']
 
 // ─── Reusable parameterised template body (inputs + generated code) ──
-function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
+function TemplateBody({ tpl, initial }: { readonly tpl: ExamTemplate; readonly initial?: Readonly<Record<string, string>> }) {
   const [vals, setVals] = useState<Record<string, string>>(
-    () => Object.fromEntries(tpl.fields.map((f) => [f.id, f.default]))
+    () => Object.fromEntries(tpl.fields.map((f) => [f.id, initial?.[f.id] ?? f.default]))
   )
   const [copied, setCopied] = useState(false)
   const code = tpl.generate(vals)
@@ -100,7 +100,9 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
   const [show, setShow] = useState(false)
   const [showCode, setShowCode] = useState(false)
   const [checked, setChecked] = useState(false) // local auto-check (independent of global submit)
-  const tpl = templateForTopic(q.topic)
+  // prefer the question's own pre-filled generator; fall back to topic matching
+  const tpl = (q.gen && templateById(q.gen.templateId)) || templateForTopic(q.topic)
+  const genInitial = q.gen && tpl && tpl.id === q.gen.templateId ? q.gen.values : undefined
   const gradable = isGradable(q)
   const isMulti = q.section === 'A-msq'
   // graded (locked) once the user checks this question OR the whole set is submitted
@@ -243,9 +245,11 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
             Code generator - {tpl.title}
           </p>
           <p className="text-xs text-ink-faint mb-2 mt-0.5">
-            Template pre-filled with example values - replace them with this question's numbers. The output shown is for the example, not this question's answer.
+            {genInitial
+              ? "Pre-filled from this question's numbers - press Run to get the answer."
+              : 'Template pre-filled with example values - replace them with this question’s numbers. The output shown is for the example, not this question’s answer.'}
           </p>
-          <TemplateBody tpl={tpl} />
+          <TemplateBody tpl={tpl} initial={genInitial} />
         </div>
       )}
 
