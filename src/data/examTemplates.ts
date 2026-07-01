@@ -205,14 +205,14 @@ print(round(crit, 4))`
     trigger: 'When it says: "construct a 95% confidence interval for the mean".',
     fields: [
       { id: 'mode', label: 'what you are given', type: 'select', default: 'summary, known var (z)', options: ['summary, known var (z)', 'summary, unknown var (t)', 'raw data (t)'] },
-      { id: 'mean', label: 'sample mean', type: 'number', default: '1500' },
-      { id: 'sd', label: 'std (pop or sample)', type: 'number', default: '200' },
-      { id: 'nn', label: 'sample size', type: 'number', default: '60' },
-      { id: 'data', label: 'raw data (comma-sep)', type: 'text', default: '1550, 1790, 1750, 1750, 1610' },
+      { id: 'mean', label: 'sample mean', type: 'number', default: '50' },
+      { id: 'sd', label: 'std (pop or sample)', type: 'number', default: '10' },
+      { id: 'nn', label: 'sample size', type: 'number', default: '30' },
+      { id: 'data', label: 'raw data (comma-sep)', type: 'text', default: '52, 48, 55, 50, 53, 49, 51, 54' },
       { id: 'conf', label: 'confidence', type: 'select', default: '0.95', options: ['0.90', '0.95', '0.99'] },
     ],
     generate: (v) => {
-      const mean = n(v.mean, '1500'), sd = n(v.sd, '200'), nn = n(v.nn, '60'), data = n(v.data, '1,2,3'), conf = n(v.conf, '0.95')
+      const mean = n(v.mean, '50'), sd = n(v.sd, '10'), nn = n(v.nn, '30'), data = n(v.data, '1,2,3'), conf = n(v.conf, '0.95')
       if (v.mode === 'raw data (t)') {
         return `# Unknown variance + raw data -> t interval
 from scipy import stats
@@ -245,12 +245,12 @@ print(f"${conf} CI: [{mean-margin:.3f}, {mean+margin:.3f}]")
     title: 'Is a mean less / greater / different from a value?',
     trigger: 'When it says: "determine whether the average X is less than / greater than / different from V".',
     fields: [
-      { id: 'data', label: 'sample (comma-sep)', type: 'text', default: '1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440' },
-      { id: 'mu', label: 'V (claimed value)', type: 'number', default: '1790' },
-      { id: 'dir', label: 'claim direction', type: 'select', default: 'less than V', options: ['less than V', 'greater than V', 'different from V'] },
+      { id: 'data', label: 'sample (comma-sep) - replace with your data', type: 'text', default: '52, 48, 55, 50, 53, 49, 51, 54' },
+      { id: 'mu', label: 'V (value claimed in H0) - replace with your value', type: 'number', default: '50' },
+      { id: 'dir', label: 'claim direction', type: 'select', default: 'greater than V', options: ['less than V', 'greater than V', 'different from V'] },
     ],
     generate: (v) => {
-      const mu = n(v.mu, '1790'), data = n(v.data, '1,2,3')
+      const mu = n(v.mu, '50'), data = n(v.data, '1,2,3')
       const alt = v.dir === 'greater than V' ? 'greater' : v.dir === 'different from V' ? 'two-sided' : 'less'
       const h = alt === 'greater' ? `H0: mu <= ${mu}\n# H1: mu > ${mu}` : alt === 'two-sided' ? `H0: mu = ${mu}\n# H1: mu != ${mu}` : `H0: mu >= ${mu}\n# H1: mu < ${mu}`
       return `# STEP 1 - Test: One-sample t-test (one sample vs a value, unknown population variance)
