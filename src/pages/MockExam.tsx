@@ -1,5 +1,5 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, X, HelpCircle, Code2, History } from 'lucide-react'
+import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, X, HelpCircle, Code2, History, Search } from 'lucide-react'
 import { mockSets, isGradable, gradeAnswer, type MockQuestion, type Section } from '../data/mockSets'
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
 import { examTemplates, examTemplateGroups, templateForTopic, templateById, type ExamTemplate } from '../data/examTemplates'
@@ -590,8 +590,87 @@ function ByTypeView() {
   )
 }
 
+// ─── Search view ────────────────────────────────────────────────────
+// A self-contained card: its own answer state so each search result is
+// independently answerable/gradable (auto-check on select), with the
+// pre-filled code generator and solution available inline.
+function StandaloneQuestionCard({ q, setId }: { readonly q: MockQuestion; readonly setId: number }) {
+  const [response, setResponse] = useState('')
+  const setLabel = setId === 0 ? 'Official' : `Set ${setId}`
+  return (
+    <div>
+      <div className="text-[10px] font-mono text-ink-faint mb-1">
+        {setLabel} - Q{q.number} - {q.topic}
+      </div>
+      <QuestionCard q={q} response={response} onRespond={setResponse} submitted={false} />
+    </div>
+  )
+}
+
+function SearchView() {
+  const [query, setQuery] = useState('')
+
+  const all = useMemo(
+    () => mockSets.flatMap((s) => s.questions.map((q) => ({ q, setId: s.id }))),
+    []
+  )
+
+  const results = useMemo(() => {
+    const terms = query.toLowerCase().split(/\s+/).filter(Boolean)
+    if (terms.length === 0) return []
+    return all.filter(({ q }) => {
+      const hay = `${q.prompt} ${q.answer} ${q.solution ?? ''} ${q.topic} ${(q.options ?? []).join(' ')}`.toLowerCase()
+      return terms.every((t) => hay.includes(t))
+    })
+  }, [all, query])
+
+  return (
+    <div className="animate-fade-in">
+      <div className="relative mb-5">
+        <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-faint" />
+        <input
+          type="text"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Search all questions, answers, solutions, topics... (e.g. 'poisson', 'confidence interval', 'chi-square')"
+          className="w-full pl-10 pr-10 py-2.5 bg-surface border border-edge rounded-lg text-sm text-ink placeholder:text-ink-faint focus:outline-none focus:border-glow/40 focus:ring-1 focus:ring-glow/20 transition-all duration-150"
+        />
+        {query && (
+          <button
+            onClick={() => setQuery('')}
+            className="absolute right-3 top-1/2 -translate-y-1/2 text-ink-muted hover:text-ink cursor-pointer"
+          >
+            <X size={16} />
+          </button>
+        )}
+      </div>
+
+      {query.trim() === '' ? (
+        <p className="text-sm text-ink-muted px-1">
+          Type a keyword to search every question across all sets. Each match shows the question, its answer/solution,
+          and a code generator pre-filled with that question's numbers.
+        </p>
+      ) : (
+        <>
+          <p className="text-xs text-ink-faint font-mono mb-3">
+            {results.length} match{results.length === 1 ? '' : 'es'}
+          </p>
+          <div className="space-y-4">
+            {results.map(({ q, setId }) => (
+              <StandaloneQuestionCard key={`${setId}-${q.id}`} q={q} setId={setId} />
+            ))}
+          </div>
+          {results.length === 0 && (
+            <p className="text-sm text-ink-muted px-1">No questions match "{query}".</p>
+          )}
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── Page ──────────────────────────────────────────────────────────
-type Tab = 'exam' | 'bytype' | 'generator'
+type Tab = 'exam' | 'search' | 'bytype' | 'generator'
 
 export default function MockExam() {
   const [tab, setTab] = useState<Tab>('exam')
@@ -609,6 +688,17 @@ export default function MockExam() {
         >
           <FileText size={15} />
           Practice Sets
+        </button>
+        <button
+          onClick={() => setTab('search')}
+          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            tab === 'search'
+              ? 'bg-glow-dim text-glow border border-glow/30'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <Search size={15} />
+          Search
         </button>
         <button
           onClick={() => setTab('bytype')}
@@ -635,6 +725,7 @@ export default function MockExam() {
       </div>
 
       {tab === 'exam' && <ExamView />}
+      {tab === 'search' && <SearchView />}
       {tab === 'bytype' && <ByTypeView />}
       {tab === 'generator' && <GeneratorView />}
     </div>
