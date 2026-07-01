@@ -408,9 +408,9 @@ function ExamView() {
         ))}
       </div>
 
-      {/* Submit bar */}
+      {/* Submit bar - at the bottom of the page */}
       {!submitted && (
-        <div className="sticky bottom-24 mt-8 flex justify-center">
+        <div className="mt-10 pt-6 border-t border-edge flex justify-center">
           <button
             onClick={submit}
             className="px-6 py-3 text-sm font-semibold rounded-full bg-glow text-void shadow-[0_4px_20px_rgba(74,222,128,0.3)] hover:bg-glow-hover cursor-pointer transition-colors"
@@ -594,12 +594,6 @@ export default function MockExam() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <h1 className="text-3xl font-bold text-ink mb-2 tracking-tight">Mock Exam</h1>
-      <p className="text-ink-muted mb-6">
-        Five full practice sets (35 questions each) modelled on the IS630 exam, plus an offline code generator
-        for every examinable topic.
-      </p>
-
       <div className="flex items-center gap-2 mb-6">
         <button
           onClick={() => setTab('exam')}
