@@ -69,6 +69,16 @@ function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
   )
 }
 
+// Break multi-part text so each "(a)", "(b)", ... part starts on its own line.
+function renderMultipart(text: string) {
+  // insert a line break before any " (x) " part marker (not at the very start)
+  const parts = text.split(/(?=\s\([a-e]\)\s)/g).map((s) => s.trim()).filter(Boolean)
+  if (parts.length <= 1) return text
+  return parts.map((p, i) => (
+    <span key={i} className={i > 0 ? 'block mt-1.5' : 'block'}>{p}</span>
+  ))
+}
+
 // ─── Exam question card ────────────────────────────────────────────
 interface QuestionCardProps {
   readonly q: MockQuestion
@@ -114,7 +124,7 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
           Q{q.number}
         </span>
         <div className="flex-1 min-w-0">
-          <p className="text-sm text-ink leading-relaxed">{q.prompt}</p>
+          <p className="text-sm text-ink leading-relaxed">{renderMultipart(q.prompt)}</p>
 
           {/* Selectable options for MCQ / MSQ */}
           {q.options && (
@@ -220,8 +230,11 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
 
       {showCode && tpl && (
         <div className="mt-3 px-3.5 py-3 rounded-lg bg-base border border-edge animate-fade-in">
-          <p className="text-[10px] font-mono text-ink-muted uppercase tracking-wider mb-2">
+          <p className="text-[10px] font-mono text-ink-muted uppercase tracking-wider">
             Code generator - {tpl.title}
+          </p>
+          <p className="text-xs text-ink-faint mb-2 mt-0.5">
+            Template pre-filled with example values - replace them with this question's numbers. The output shown is for the example, not this question's answer.
           </p>
           <TemplateBody tpl={tpl} />
         </div>
@@ -231,7 +244,7 @@ function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) 
         <div className="mt-3 space-y-2 animate-fade-in">
           <div className="px-3.5 py-2.5 rounded-lg bg-glow-dim/30 border border-glow/15">
             <span className="text-[10px] font-mono text-glow uppercase tracking-wider">Answer</span>
-            <p className="text-sm text-ink mt-0.5 whitespace-pre-wrap">{q.answer}</p>
+            <p className="text-sm text-ink mt-0.5 whitespace-pre-wrap">{renderMultipart(q.answer)}</p>
           </div>
           {q.solution && (
             <div className="px-3.5 py-2.5 rounded-lg bg-base border border-edge">
