@@ -22,6 +22,32 @@ export interface MockSet {
   readonly questions: readonly MockQuestion[]
 }
 
+// A question is auto-gradable if it is MCQ/MSQ or has a purely numeric answer.
+export function isGradable(q: MockQuestion): boolean {
+  if (q.section === 'A-mcq' || q.section === 'A-msq') return true
+  if (q.section === 'B-short') return /^-?\d+\.?\d*$/.test(q.answer.trim())
+  return false
+}
+
+const LETTERS = (s: string) =>
+  s.toUpperCase().replace(/[^A-D]/g, '').split('').sort().join('')
+
+// Grade a user response against the correct answer. Returns null if not auto-gradable.
+export function gradeAnswer(q: MockQuestion, response: string): boolean | null {
+  if (!isGradable(q)) return null
+  const resp = response.trim()
+  if (resp === '') return false
+  if (q.section === 'A-mcq' || q.section === 'A-msq') {
+    return LETTERS(resp) === LETTERS(q.answer)
+  }
+  // B-short numeric: accept within a small relative/absolute tolerance
+  const target = parseFloat(q.answer)
+  const val = parseFloat(resp.replace(/,/g, ''))
+  if (Number.isNaN(val)) return false
+  const tol = Math.max(0.005, Math.abs(target) * 0.01)
+  return Math.abs(val - target) <= tol
+}
+
 const SET1: MockSet = {
   id: 1,
   title: 'Mock Set 1',

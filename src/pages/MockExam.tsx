@@ -1,8 +1,9 @@
 import { useState, useMemo } from 'react'
-import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, HelpCircle, Code2 } from 'lucide-react'
-import { mockSets, type MockQuestion, type Section } from '../data/mockSets'
+import { ChevronDown, ChevronRight, Eye, EyeOff, FileText, Wrench, Copy, Check, X, HelpCircle, Code2, History } from 'lucide-react'
+import { mockSets, isGradable, gradeAnswer, type MockQuestion, type Section } from '../data/mockSets'
 import { codeGenerators, codeGenCategories, type CodeGen } from '../data/codegen'
 import { examTemplates, examTemplateGroups, templateForTopic, type ExamTemplate } from '../data/examTemplates'
+import { useAttempts } from '../hooks/useAttempts'
 
 const sectionMeta: Record<Section, { label: string; color: string }> = {
   'A-mcq': { label: 'Section A - Multiple Choice (1 mark)', color: 'text-s1' },
@@ -67,30 +68,98 @@ function TemplateBody({ tpl }: { readonly tpl: ExamTemplate }) {
 }
 
 // ─── Exam question card ────────────────────────────────────────────
-function QuestionCard({ q }: { readonly q: MockQuestion }) {
+interface QuestionCardProps {
+  readonly q: MockQuestion
+  readonly response: string
+  readonly onRespond: (value: string) => void
+  readonly submitted: boolean
+}
+
+function QuestionCard({ q, response, onRespond, submitted }: QuestionCardProps) {
   const [show, setShow] = useState(false)
   const [showCode, setShowCode] = useState(false)
   const tpl = templateForTopic(q.topic)
+  const gradable = isGradable(q)
+  const isMulti = q.section === 'A-msq'
+  const verdict = submitted && gradable ? gradeAnswer(q, response) : null
+
+  // toggle a letter for MCQ (single) / MSQ (multi)
+  const optionLetter = (opt: string) => opt.trim().charAt(0).toUpperCase()
+  const selected = new Set(response.toUpperCase().replace(/[^A-D]/g, '').split(''))
+  const toggle = (letter: string) => {
+    if (submitted) return
+    if (isMulti) {
+      const next = new Set(selected)
+      next.has(letter) ? next.delete(letter) : next.add(letter)
+      onRespond([...next].sort().join(', '))
+    } else {
+      onRespond(letter)
+    }
+  }
+
+  const borderClass =
+    verdict === true ? 'border-green-500/40' : verdict === false ? 'border-red-500/40' : 'border-edge'
+
   return (
-    <div className="bg-surface border border-edge rounded-lg p-5">
+    <div className={`bg-surface border rounded-lg p-5 ${borderClass}`}>
       <div className="flex items-start gap-3">
         <span className="flex-shrink-0 text-xs font-mono text-glow bg-glow-dim px-2 py-0.5 rounded border border-glow/15">
           Q{q.number}
         </span>
         <div className="flex-1 min-w-0">
           <p className="text-sm text-ink leading-relaxed">{q.prompt}</p>
+
+          {/* Selectable options for MCQ / MSQ */}
           {q.options && (
             <ul className="mt-3 space-y-1.5">
-              {q.options.map((opt) => (
-                <li key={opt} className="text-sm text-ink-secondary pl-1">{opt}</li>
-              ))}
+              {q.options.map((opt) => {
+                const letter = optionLetter(opt)
+                const isSel = selected.has(letter)
+                const isCorrect = submitted && new Set(q.answer.toUpperCase().replace(/[^A-D]/g, '').split('')).has(letter)
+                let cls = 'border-edge text-ink-secondary hover:bg-raised'
+                if (submitted) {
+                  if (isCorrect) cls = 'border-green-500/50 bg-green-500/10 text-ink'
+                  else if (isSel) cls = 'border-red-500/50 bg-red-500/10 text-ink'
+                  else cls = 'border-edge text-ink-muted'
+                } else if (isSel) {
+                  cls = 'border-glow/50 bg-glow-dim text-ink'
+                }
+                return (
+                  <li key={opt}>
+                    <button
+                      disabled={submitted}
+                      onClick={() => toggle(letter)}
+                      className={`w-full text-left text-sm px-3 py-2 rounded-lg border transition-colors duration-150 ${submitted ? '' : 'cursor-pointer'} ${cls}`}
+                    >
+                      {opt}
+                    </button>
+                  </li>
+                )
+              })}
             </ul>
+          )}
+
+          {/* Numeric input for gradable short answers */}
+          {!q.options && q.section === 'B-short' && gradable && (
+            <div className="mt-3 flex items-center gap-2">
+              <input
+                type="text"
+                inputMode="decimal"
+                value={response}
+                disabled={submitted}
+                onChange={(e) => onRespond(e.target.value)}
+                placeholder="Your answer"
+                className={`w-40 px-3 py-2 bg-base border rounded-lg text-sm text-ink font-mono focus:outline-none focus:border-glow/40 ${borderClass}`}
+              />
+              {verdict === true && <Check size={16} className="text-green-500" />}
+              {verdict === false && <X size={16} className="text-red-500" />}
+            </div>
           )}
         </div>
         <span className="flex-shrink-0 text-[10px] font-mono text-ink-faint">{q.marks} mk</span>
       </div>
 
-      <div className="mt-4 flex items-center gap-4">
+      <div className="mt-4 flex items-center gap-4 flex-wrap">
         <button
           onClick={() => setShow((s) => !s)}
           className="flex items-center gap-1.5 text-xs text-glow hover:text-glow-hover cursor-pointer transition-colors"
@@ -107,6 +176,9 @@ function QuestionCard({ q }: { readonly q: MockQuestion }) {
             {showCode ? 'Hide code generator' : 'Generate code'}
           </button>
         )}
+        {verdict === true && <span className="text-xs font-medium text-green-500">Correct (+{q.marks} mk)</span>}
+        {verdict === false && <span className="text-xs font-medium text-red-500">Incorrect</span>}
+        {submitted && !gradable && <span className="text-xs text-ink-faint">Self-mark (see answer)</span>}
       </div>
 
       {showCode && tpl && (
@@ -139,13 +211,53 @@ function QuestionCard({ q }: { readonly q: MockQuestion }) {
 // ─── Exam view ─────────────────────────────────────────────────────
 function ExamView() {
   const [setId, setSetId] = useState(1)
-  const set = mockSets.find((s) => s.id === setId)!
+  const [responses, setResponses] = useState<Record<string, string>>({})
+  const [submitted, setSubmitted] = useState(false)
+  const { attempts, add, clear } = useAttempts()
 
-  const totalMarks = useMemo(() => set.questions.reduce((sum, q) => sum + q.marks, 0), [set])
+  const set = mockSets.find((s) => s.id === setId)!
   const grouped = useMemo(
     () => sectionOrder.map((sec) => ({ sec, qs: set.questions.filter((q) => q.section === sec) })),
     [set]
   )
+  const gradableQs = useMemo(() => set.questions.filter(isGradable), [set])
+  const gradableMarks = useMemo(() => gradableQs.reduce((s, q) => s + q.marks, 0), [gradableQs])
+  const answeredCount = gradableQs.filter((q) => (responses[q.id] ?? '').trim() !== '').length
+
+  const score = useMemo(() => {
+    let earned = 0, correct = 0
+    for (const q of gradableQs) {
+      if (gradeAnswer(q, responses[q.id] ?? '')) { earned += q.marks; correct++ }
+    }
+    return { earned, correct }
+  }, [gradableQs, responses])
+
+  const switchSet = (id: number) => {
+    setSetId(id)
+    setResponses({})
+    setSubmitted(false)
+  }
+
+  const submit = () => {
+    setSubmitted(true)
+    add({
+      id: `${setId}-${Date.now()}`,
+      setId,
+      dateISO: new Date().toISOString(),
+      earned: score.earned,
+      total: gradableMarks,
+      correct: score.correct,
+      gradable: gradableQs.length,
+    })
+    window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const reset = () => {
+    setResponses({})
+    setSubmitted(false)
+  }
+
+  const setAttempts = attempts.filter((a) => a.setId === setId)
 
   return (
     <div className="animate-fade-in">
@@ -153,7 +265,7 @@ function ExamView() {
         {mockSets.map((s) => (
           <button
             key={s.id}
-            onClick={() => setSetId(s.id)}
+            onClick={() => switchSet(s.id)}
             className={`px-3.5 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer border ${
               setId === s.id
                 ? 'bg-glow-dim text-glow border-glow/30'
@@ -164,9 +276,56 @@ function ExamView() {
           </button>
         ))}
         <span className="ml-auto text-xs text-ink-faint font-mono">
-          {set.questions.length} questions - {totalMarks} marks
+          {answeredCount}/{gradableQs.length} answered - {gradableMarks} auto-graded marks
         </span>
       </div>
+
+      {/* Score banner after submit */}
+      {submitted && (
+        <div className="mb-6 px-5 py-4 rounded-lg bg-glow-dim/30 border border-glow/25 animate-fade-in">
+          <div className="flex items-center justify-between flex-wrap gap-3">
+            <div>
+              <p className="text-lg font-bold text-ink">
+                Score: {score.earned} / {gradableMarks} marks
+                <span className="text-sm font-normal text-ink-muted ml-2">
+                  ({score.correct}/{gradableQs.length} correct, {gradableMarks ? Math.round((score.earned / gradableMarks) * 100) : 0}%)
+                </span>
+              </p>
+              <p className="text-xs text-ink-muted mt-1">
+                Section C (structured) is self-marked - check "Show answer" on each.
+              </p>
+            </div>
+            <button
+              onClick={reset}
+              className="px-4 py-2 text-sm rounded-lg bg-surface text-ink border border-edge hover:bg-raised cursor-pointer transition-colors"
+            >
+              Retake
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Attempt history for this set */}
+      {setAttempts.length > 0 && (
+        <div className="mb-6 px-4 py-3 rounded-lg bg-surface border border-edge">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-xs font-semibold text-ink flex items-center gap-1.5">
+              <History size={13} /> Attempt history - Set {setId}
+            </span>
+            <button onClick={clear} className="text-[10px] text-ink-faint hover:text-red-400 cursor-pointer">clear all</button>
+          </div>
+          <div className="space-y-1">
+            {setAttempts.slice(0, 5).map((a) => (
+              <div key={a.id} className="flex items-center justify-between text-xs font-mono text-ink-secondary">
+                <span>{new Date(a.dateISO).toLocaleString()}</span>
+                <span className="text-ink">
+                  {a.earned}/{a.total} ({a.total ? Math.round((a.earned / a.total) * 100) : 0}%)
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="space-y-8">
         {grouped.map(({ sec, qs }) => (
@@ -175,11 +334,31 @@ function ExamView() {
               {sectionMeta[sec].label}
             </h2>
             <div className="space-y-3">
-              {qs.map((q) => <QuestionCard key={q.id} q={q} />)}
+              {qs.map((q) => (
+                <QuestionCard
+                  key={q.id}
+                  q={q}
+                  response={responses[q.id] ?? ''}
+                  onRespond={(value) => setResponses((r) => ({ ...r, [q.id]: value }))}
+                  submitted={submitted}
+                />
+              ))}
             </div>
           </section>
         ))}
       </div>
+
+      {/* Submit bar */}
+      {!submitted && (
+        <div className="sticky bottom-24 mt-8 flex justify-center">
+          <button
+            onClick={submit}
+            className="px-6 py-3 text-sm font-semibold rounded-full bg-glow text-void shadow-[0_4px_20px_rgba(74,222,128,0.3)] hover:bg-glow-hover cursor-pointer transition-colors"
+          >
+            Submit &amp; grade ({answeredCount}/{gradableQs.length} answered)
+          </button>
+        </div>
+      )}
     </div>
   )
 }
