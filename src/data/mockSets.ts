@@ -205,33 +205,26 @@ const SET1: MockSet = {
       id: 's1q19', section: 'C-structured', number: 19, marks: 6, topic: '1-sample t-test',
       prompt: 'A retailer claims the average delivery time is 3 days. A sample of 12 deliveries gives: 3.5, 4.1, 2.9, 3.8, 4.0, 3.2, 4.5, 3.9, 3.1, 4.2, 3.7, 4.4 days. At the 5% level, test whether the true average delivery time is GREATER than 3 days. (a) State the test and hypotheses [2]. (b) Show the code [2]. (c) State the conclusion [2].',
       answer: 'Reject H0; sufficient evidence that mean delivery time > 3 days (t ~ 5.23, p ~ 0.0001).',
-      solution: `(a) One-sample t-test (unknown population variance).
-H0: mu <= 3   H1: mu > 3
-
-(b)
-from scipy import stats
+      solution: `from scipy import stats
+# (a) One-sample t-test (unknown population variance). H0: mu <= 3, H1: mu > 3
 sample = [3.5, 4.1, 2.9, 3.8, 4.0, 3.2, 4.5, 3.9, 3.1, 4.2, 3.7, 4.4]
 t_stat, p_value = stats.ttest_1samp(sample, popmean=3, alternative='greater')
-print(t_stat, p_value)
-
-(c) t ~ 5.23, p ~ 0.0001 < 0.05 -> reject H0. There is sufficient evidence that the average delivery time exceeds 3 days.`,
+print("t =", round(t_stat, 3), " p =", round(p_value, 4))
+# (b) code above.  Output: t = 5.226, p = 0.0001
+# (c) p < 0.05 -> reject H0. Sufficient evidence the average delivery time exceeds 3 days.`,
     },
     {
       id: 's1q20', section: 'C-structured', number: 20, marks: 6, topic: 'Chi-square',
       prompt: 'A study records whether customers (Region North/South/East) prefer Product A or B. North: 60 A, 40 B; South: 30 A, 70 B; East: 50 A, 50 B. At 5% significance, test whether preference is associated with region. (a) Hypotheses + test [2]. (b) Code [2]. (c) dof and conclusion [2].',
       answer: 'Chi-square test of independence; dof = 2; reject H0 (chi2 ~ 18.75, p ~ 0.0001) — preference is associated with region.',
-      solution: `(a) Chi-square test of independence.
-H0: region and product preference are independent.
-H1: they are associated.
-
-(b)
-from scipy.stats import chi2_contingency
+      solution: `from scipy.stats import chi2_contingency
 import numpy as np
+# (a) Chi-square test of independence. H0: region and preference independent; H1: associated.
 matrix = np.array([[60, 40], [30, 70], [50, 50]])
 chi2, p, dof, expected = chi2_contingency(matrix, correction=False)
-print(chi2, dof, p)
-
-(c) dof = (3-1)(2-1) = 2. chi2 ~ 18.75, p ~ 0.0001 < 0.05 -> reject H0: product preference is associated with region.`,
+print("chi2 =", round(chi2, 3), " dof =", dof, " p =", round(p, 4))
+# (b) code above.  Output: chi2 = 18.75, dof = 2, p = 0.0001
+# (c) dof = (3-1)(2-1) = 2. p < 0.05 -> reject H0: preference is associated with region.`,
     },
     {
       id: 's1q21', section: 'C-structured', number: 21, marks: 8, topic: 'ANOVA + Tukey',
@@ -243,13 +236,14 @@ from statsmodels.stats.multicomp import pairwise_tukeyhsd
 f1 = [20, 22, 19, 24, 21]
 f2 = [28, 25, 30, 27, 26]
 f3 = [21, 23, 20, 22, 24]
-print(stats.f_oneway(f1, f2, f3))   # F ~ 16.08, p ~ 0.0004
+print(stats.f_oneway(f1, f2, f3))   # F = 16.08, p = 0.0004
 
 vals = f1 + f2 + f3
 labels = ['F1']*5 + ['F2']*5 + ['F3']*5
 print(pairwise_tukeyhsd(vals, labels, alpha=0.05))
-
-Interpretation: p ~ 0.0004 < 0.05 -> reject H0, at least one mean differs. Tukey shows F2 differs significantly from F1 and F3 (reject=True), while F1 vs F3 is not significant. Mean yields: F2 (27.2) > F3 (22.0) ~ F1 (21.2), so F2 is the most effective fertiliser.`,
+# Interpretation: p < 0.05 -> reject H0, at least one mean differs. Tukey shows F2
+# differs from F1 and F3 (reject=True); F1 vs F3 not significant. Means: F2 (27.2)
+# > F3 (22.0) ~ F1 (21.2), so F2 is the most effective fertiliser.`,
     },
     {
       id: 's1q22', section: 'C-structured', number: 22, marks: 4, topic: 'Regression interpretation',
