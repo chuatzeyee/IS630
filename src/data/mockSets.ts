@@ -48,6 +48,227 @@ export function gradeAnswer(q: MockQuestion, response: string): boolean | null {
   return Math.abs(val - target) <= tol
 }
 
+const SET0: MockSet = {
+  id: 0,
+  title: 'Official Practice Paper',
+  questions: [
+    // ── Section A: MCQ ──
+    {
+      id: 's0q1', section: 'A-mcq', number: 1, marks: 1, topic: 'Sampling distribution',
+      prompt: 'If the population follows a normal distribution, the sampling distribution of the sample mean would also be normally distributed for',
+      options: ['A. any sample size', 'B. large sample sizes of >= 30 only', 'C. sample sizes of < 30 only', 'D. sample sizes between 30 to 100 (inclusive at both ends)'],
+      answer: 'A',
+      solution: 'If the population is already normal, the sampling distribution of the mean is normal for ANY sample size. (The n >= 30 rule is only needed when the population is non-normal, via the CLT.)',
+    },
+    {
+      id: 's0q2', section: 'A-mcq', number: 2, marks: 1, topic: 'Confidence interval',
+      prompt: 'You want to construct a 95% confidence interval with a KNOWN population variance. Parameters: (1) Sample mean, (2) Sample variance / sd, (3) Sample size, (4) Sample median. Which is/are required?',
+      options: ['A. All parameters', 'B. Parameters (1) and (3)', 'C. Parameters (1), (2) and (3)', 'D. Parameters (2), (3) and (4)'],
+      answer: 'B',
+      solution: 'With KNOWN population variance you use the z interval: you need the sample mean (1) and sample size (3). The population sd is given, so sample variance (2) is not required; the median (4) is never used.',
+    },
+    {
+      id: 's0q3', section: 'A-mcq', number: 3, marks: 1, topic: 'Probability',
+      prompt: 'P(A) = 0.3 and P(B) = 0.4. What is P(A | B), given that A and B are mutually exclusive?',
+      options: ['A. 0', 'B. 0.3', 'C. 0.12', 'D. Cannot be calculated or determined'],
+      answer: 'A',
+      solution: 'Mutually exclusive means P(A and B) = 0, so P(A|B) = P(A and B)/P(B) = 0/0.4 = 0.',
+    },
+    {
+      id: 's0q4', section: 'A-mcq', number: 4, marks: 1, topic: 'Probability',
+      prompt: 'Given P(A) = 0.50, P(B) = 0.70, and P(A U B) = 0.85. Which is a valid conclusion?',
+      options: ['A. Events A and B are exhaustive', 'B. Events A and B are independent', 'C. Events A and B are mutually exclusive', 'D. Events A and B are conditionally independent'],
+      answer: 'B',
+      solution: 'P(A and B) = P(A) + P(B) - P(A U B) = 0.50 + 0.70 - 0.85 = 0.35. Since P(A)*P(B) = 0.50*0.70 = 0.35 = P(A and B), A and B are independent.',
+    },
+    {
+      id: 's0q5', section: 'A-mcq', number: 5, marks: 1, topic: 'Visualisation',
+      prompt: 'Which data visualization chart is best suited for showing the distribution of a single continuous variable?',
+      options: ['A. Bar chart', 'B. Scatter plot', 'C. Pie chart', 'D. Histogram'],
+      answer: 'D',
+      solution: 'A histogram shows the distribution of one continuous variable. (Bar/pie are for categorical; scatter is for two variables.)',
+    },
+    {
+      id: 's0q6', section: 'A-mcq', number: 6, marks: 1, topic: 'Descriptive stats',
+      prompt: 'Which of the following can be used to assess the spread of a variable in a dataset?',
+      options: ['A. Sample Correlation', 'B. Sample Standard Deviation', 'C. Standard Error of the sample distribution', 'D. Sample Mean'],
+      answer: 'B',
+      solution: 'Sample standard deviation measures the spread of the data. (Standard error measures spread of the sample MEAN, not the variable; mean is central tendency; correlation is a relationship.)',
+    },
+    {
+      id: 's0q7', section: 'A-mcq', number: 7, marks: 1, topic: 'Descriptive stats',
+      prompt: 'A histogram of hospital length of stay is heavily concentrated at 1-2 days with a few values at 8-9 days (right tail). Determine the relationship between the mean and the median.',
+      options: ['A. Mean = Median', 'B. Mean < Median', 'C. Mean > Median', 'D. Cannot be determined'],
+      answer: 'C',
+      solution: 'The long right tail (a few large values) pulls the mean above the median: Mean > Median (right/positive skew).',
+    },
+    {
+      id: 's0q8', section: 'A-mcq', number: 8, marks: 1, topic: 'Non-parametric',
+      prompt: 'Which of the following is a key characteristic of non-parametric tests?',
+      options: ['A. They always require sample sizes >= 30', 'B. They require the assumption that data is not normally distributed', 'C. They do not require strict distribution assumptions', 'D. They test hypotheses about standard deviations'],
+      answer: 'C',
+      solution: 'Non-parametric tests make no strict assumptions about the underlying distribution (e.g. they do not require normality).',
+    },
+    {
+      id: 's0q9', section: 'A-mcq', number: 9, marks: 1, topic: 'Hypothesis testing',
+      prompt: 'Which best describes the purpose of the significance level (alpha) in hypothesis testing?',
+      options: ['A. It determines the sample size', 'B. It determines Type II error', 'C. It defines the rejection or acceptance region', 'D. It proves that the null hypothesis is true 95% of the time'],
+      answer: 'C',
+      solution: 'Alpha sets the threshold that defines the rejection/acceptance region (and is the probability of a Type I error).',
+    },
+    // MCQ 10 (paper Q10)
+    {
+      id: 's0q10', section: 'A-mcq', number: 10, marks: 1, topic: 'Test selection',
+      prompt: 'Which test is appropriate for comparing nominal categorical outcomes across multiple groups?',
+      options: ['A. ANOVA', 'B. Kruskal-Wallis', 'C. Spearman Correlation (non-parametric)', 'D. Chi-Square test'],
+      answer: 'D',
+      solution: 'The Chi-Square test compares categorical (nominal) outcomes across groups. (ANOVA/Kruskal-Wallis compare a numeric outcome; Spearman is a correlation.)',
+    },
+    {
+      id: 's0q11', section: 'A-mcq', number: 11, marks: 1, topic: 'Correlation',
+      prompt: "You've calculated a correlation of 0 between two variables. Which can you conclude?",
+      options: ['A. There is no relationship between the two variables', 'B. There is no linear relationship between the two variables', 'C. There is no symmetric relationship between the two variables', 'D. There is no variability between the two variables'],
+      answer: 'B',
+      solution: 'Correlation = 0 rules out a LINEAR relationship only; a non-linear relationship can still exist.',
+    },
+    {
+      id: 's0q12', section: 'A-mcq', number: 12, marks: 1, topic: 'Bayes theorem',
+      prompt: "90% chance of rain when cloudy; 20% of days are cloudy; 30% of all days have rain. Given it rains today, what is the probability it was cloudy?",
+      options: ['A. 0.06', 'B. 0.18', 'C. 0.6', 'D. 1.35'],
+      answer: 'C',
+      solution: 'P(Cloudy | Rain) = P(Rain|Cloudy)*P(Cloudy)/P(Rain) = (0.9*0.2)/0.3 = 0.6.',
+    },
+    // ── Section A: MSQ ──
+    {
+      id: 's0q13', section: 'A-msq', number: 13, marks: 2, topic: 'Association measures',
+      prompt: 'As email clicks increase, purchases also increase. Which statistical measure(s) can quantify this relationship? (Select all that apply)',
+      options: ['A. Covariance', 'B. Pearson Correlation', 'C. Variances of the two variables', 'D. Beta Coefficient of a regression involving these two variables'],
+      answer: 'A, B, D',
+      solution: 'Covariance, Pearson correlation, and a regression beta coefficient all quantify the relationship between two variables. Individual variances do not.',
+    },
+    {
+      id: 's0q14', section: 'A-msq', number: 14, marks: 2, topic: 'ANOVA scenarios',
+      prompt: 'Which is/are a valid scenario for using ANOVA? (Select all that apply)',
+      options: ['A. Comparing average GPA across 4 courses', 'B. Analysing salaries across different ages (as continuous variable)', 'C. Analysing average salary across different age bins (18-21, 21-35, 35-50, >50)', 'D. Comparing sample means across two populations'],
+      answer: 'A, C',
+      solution: 'ANOVA compares means across 3+ groups: 4 courses (A) and 4 age bins (C). A continuous predictor (B) needs regression; two groups (D) needs a t-test.',
+    },
+    {
+      id: 's0q15', section: 'A-msq', number: 15, marks: 2, topic: 'Multicollinearity',
+      prompt: 'Which is/are a valid method for addressing multicollinearity in a high-dimension regression? (Select all that apply)',
+      options: ['A. Multiply all features to create an interaction term, then use it', 'B. Apply PCA to transform features into uncorrelated components', 'C. Examine VIF and drop variables with high VIF or low significance (high p-values)', 'D. Run separate simple linear regressions for each predictor individually'],
+      answer: 'B, C',
+      solution: 'PCA (B) produces uncorrelated components; VIF-based removal (C) drops collinear predictors. Multiplying features (A) worsens it; separate regressions (D) do not address multicollinearity in the multivariate model.',
+    },
+    // ── Section B: Short ──
+    {
+      id: 's0q16', section: 'B-short', number: 16, marks: 1, topic: 'Binomial',
+      prompt: 'X follows a binomial distribution with mean = 4 and variance = 3. What is the probability of getting exactly six successes (to 3 d.p.)?',
+      answer: '0.110',
+      solution: 'from scipy import stats\n# np = 4, npq = 3 -> q = 3/4, p = 1/4, n = 16\nprint(round(stats.binom.pmf(6, 16, 0.25), 3))\n# 0.110',
+    },
+    {
+      id: 's0q17', section: 'B-short', number: 17, marks: 2, topic: 'Exponential',
+      prompt: 'A call center receives a new call every 10 minutes on average. After a customer calls, what is the probability that a new customer calls within 10 to 15 minutes (to 3 d.p.)?',
+      answer: '0.145',
+      solution: 'from scipy import stats\n# Exponential inter-arrival, scale = 10\nprint(round(stats.expon.cdf(15, scale=10) - stats.expon.cdf(10, scale=10), 3))\n# 0.145',
+    },
+    {
+      id: 's0q18', section: 'B-short', number: 18, marks: 2, topic: 'Exponential',
+      prompt: 'The interval X seconds between two cyclists passing a point follows an exponential distribution with lambda = 0.08 cyclists/second. Probability that the interval between the next two cyclists is longer than 20 seconds (to 3 d.p.)?',
+      answer: '0.202',
+      solution: 'from scipy import stats\n# scale = 1/lambda = 1/0.08\nprint(round(stats.expon.sf(20, scale=1/0.08), 3))\n# 0.202',
+    },
+    {
+      id: 's0q19', section: 'B-short', number: 19, marks: 1, topic: 'Conditional probability (table)',
+      prompt: '1000 employees. Male-Skilled: 350 satisfied / 150 unsatisfied; Male-Unskilled: 150 / 100; Female-Skilled: 25 / 75; Female-Unskilled: 100 / 50. Calculate the probability that the employee is a skilled female AND satisfied (to 3 d.p.).',
+      answer: '0.025',
+      solution: 'Read from the table: skilled female & satisfied = 25 out of 1000 = 25/1000 = 0.025.',
+    },
+    {
+      id: 's0q20', section: 'B-short', number: 20, marks: 1, topic: 'Conditional probability (table)',
+      prompt: 'Using the same worker-satisfaction table (1000 employees), calculate the probability that the employee is satisfied with work, GIVEN that the employee is an unskilled worker (to 3 d.p.).',
+      answer: '0.625',
+      solution: 'Unskilled satisfied = 150 (male) + 100 (female) = 250. Unskilled total = 250 + 150 = 400. P = 250/400 = 0.625.',
+    },
+    {
+      id: 's0q21', section: 'B-short', number: 21, marks: 2, topic: 'Probability (independence)',
+      prompt: 'Two people each make the right decision 60% of the time and decide independently. A decision is delayed for further consideration only if they disagree. Probability that they delay the decision (to 2 d.p.)?',
+      answer: '0.48',
+      solution: 'Disagree = one right, one wrong: 0.6*0.4 + 0.4*0.6 = 0.48.',
+    },
+    // ── Section C: Structured ──
+    {
+      id: 's0q22', section: 'C-structured', number: 22, marks: 3, topic: 'Chi-square',
+      prompt: 'A researcher tests whether ethnic group is associated with place of residence (Rural vs Urban). Counts by ethnicity (Rural, Urban): A (125, 1732), B (8, 538), C (6, 32), D (10, 42), E (12, 133), F (7, 23). Use alpha = 5%. (a) chi2 statistic (3 d.p.) [1]. (b) degrees of freedom [1]. (c) expected count of Ethnic A in Rural, rounded up (1 mark) [1].',
+      answer: '(a) chi2 = 58.463  (b) dof = 5  (c) 117',
+      solution: 'from scipy.stats import chi2_contingency\nimport numpy as np\nimport math\n# rows = ethnic groups, cols = [Rural, Urban]\nmatrix = np.array([[125, 1732], [8, 538], [6, 32], [10, 42], [12, 133], [7, 23]])\nchi2, p, dof, expected = chi2_contingency(matrix, correction=False)\nprint("(a) chi2 =", round(chi2, 3))\nprint("(b) dof =", dof)\nprint("(c) expected A-Rural (round up) =", math.ceil(expected[0][0]))\n# (a) 58.463  (b) 5  (c) 117',
+    },
+    {
+      id: 's0q23', section: 'C-structured', number: 23, marks: 6, topic: 'One-sample t-test',
+      prompt: 'The price of a phone at a chain store is $1790. 10 online-auction prices: 1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440. Assuming normality, at the 5% level test whether the average online price is LESS than $1790. (a) State the test and hypotheses [2]. (b) Show the code [2]. (c) Report the output and state the conclusion [2].',
+      answer: 'One-sample (single-population) t-test. H0: mu >= 1790, H1: mu < 1790. Reject H0 (t = -3.716, p = 0.0024 < 0.05): sufficient evidence the average online price is less than $1790.',
+      solution: "from scipy import stats\n# (a) One-sample t-test. H0: mu >= 1790, H1: mu < 1790\nsample = [1550, 1790, 1750, 1750, 1610, 1600, 1800, 1520, 1640, 1440]\nt_stat, p_value = stats.ttest_1samp(sample, popmean=1790, alternative='less')\nprint(\"t =\", round(t_stat, 3), \" p =\", round(p_value, 4))\n# (b) code above.  Output: t = -3.716, p = 0.0024\n# (c) p < 0.05 -> reject H0. Sufficient evidence the average online price is less than $1790.",
+    },
+    {
+      id: 's0q24', section: 'C-structured', number: 24, marks: 4, topic: 'Confidence interval (z)',
+      prompt: 'A random sample of 60 one-bedroom studios advertised on a property website has mean monthly rent $1500. Assume the population standard deviation is $200. (a) Construct a 95% confidence interval and show the code [2]. (b) State the interval [1]. (c) Can we use this CI to infer for ALL one-bedroom studios in the area? Justify [1].',
+      answer: '(a)/(b) 95% CI = [1449.394, 1550.606]. (c) No - only for studios advertised on that website; the sample does not include listings from other sources, so it may not represent all studios in the area.',
+      solution: 'from scipy import stats\nimport numpy as np\nmean, sigma, n_ = 1500, 200, 60\nalpha = 0.05\nlower = mean - stats.norm.ppf(1 - alpha/2) * sigma/np.sqrt(n_)\nupper = mean + stats.norm.ppf(1 - alpha/2) * sigma/np.sqrt(n_)\nprint(f"95% CI: [{lower:.3f}, {upper:.3f}]")\n# 95% CI: [1449.394, 1550.606]\n# (c) No - the sample is only from one website, so we can only conclude for studios listed there.',
+    },
+    {
+      id: 's0q25', section: 'C-structured', number: 25, marks: 6, topic: 'ANOVA + Tukey',
+      prompt: 'Four training programs, 5 trainees each, task completion time (mins). Prog1: 9,12,14,11,13; Prog2: 8,9,6,9,10; Prog3: 12,14,11,13,11; Prog4: 9,8,10,7,8. At 0.05 significance, determine whether mean time differs among the four programs, and if so which differ. (a) State the test and hypotheses [2]. (b) Complete analysis incl. post-hoc, with code, outputs and interpretation [4].',
+      answer: 'ANOVA. H0: all program mean times equal; H1: at least one differs. F = 9.659, p = 0.000708 < 0.05 -> reject H0. Tukey: Prog1 differs from Prog2 & Prog4; Prog2 differs from Prog3; Prog3 differs from Prog4. Prog1~Prog3 and Prog2~Prog4 not different. Prog2 and Prog4 finish fastest (most effective).',
+      solution: "from scipy import stats\nfrom statsmodels.stats.multicomp import pairwise_tukeyhsd\n# H0: all program means equal; H1: at least one differs\ndata = {'Prog1':[9,12,14,11,13], 'Prog2':[8,9,6,9,10], 'Prog3':[12,14,11,13,11], 'Prog4':[9,8,10,7,8]}\nprint(stats.f_oneway(*data.values()))   # F = 9.659, p = 0.000708\nvals, labels = [], []\nfor name, arr in data.items():\n    vals += arr; labels += [name]*len(arr)\nprint(pairwise_tukeyhsd(vals, labels, alpha=0.05))\n# p < 0.05 -> reject H0. Tukey: significant pairs are 1-2, 1-4, 2-3, 3-4 (reject=True);\n# 1-3 and 2-4 not significant. Means: Prog1 11.8, Prog2 8.4, Prog3 12.2, Prog4 8.4\n# -> Prog2 and Prog4 are most effective (fastest).",
+    },
+    {
+      id: 's0q26', section: 'C-structured', number: 26, marks: 1, topic: 'Regression interpretation',
+      prompt: 'An OLS output uses X_train = sm.add_constant(X_train). If the add_constant line is removed, in what way will the output table differ? [1]',
+      answer: 'The output will have no "const" row - the model becomes a no-intercept (through-the-origin) model.',
+      solution: 'add_constant adds the intercept column. Without it, there is no "const" row in the coefficients table and the model is fitted without an intercept (forced through the origin).',
+    },
+    {
+      id: 's0q27', section: 'C-structured', number: 27, marks: 1, topic: 'Regression interpretation',
+      prompt: 'The OLS regression (dependent = daily bike count; predictors temp, hum, windspeed, registered) has Prob(F-statistic) near 0. Is the model significant at the 5% level? Explain using a statistical measure. [1]',
+      answer: 'Yes. The F-test p-value (near 0) < 0.05, so reject H0 that all coefficients are 0: at least one predictor is significant and the model fits better than the intercept-only model.',
+      solution: 'The overall F-test p-value (Prob (F-statistic)) is near 0, which is < 0.05. Reject the null that all slope coefficients equal zero -> the model is statistically significant.',
+    },
+    {
+      id: 's0q28', section: 'C-structured', number: 28, marks: 2, topic: 'Regression interpretation',
+      prompt: 'If the analyst adds an additional variable to the regression model, state the effect on R-squared and Adjusted R-squared. [2]',
+      answer: 'R-squared stays the same or increases (never decreases). Adjusted R-squared increases only if the new variable adds enough explanatory power; otherwise it decreases (it penalises useless predictors).',
+      solution: 'R-squared never falls when a predictor is added (it stays the same or rises). Adjusted R-squared includes a penalty for the number of predictors, so it rises only if the new variable adds meaningful explanatory power and falls if it does not.',
+    },
+    // ── "Other Questions" bank (practice extras) ──
+    {
+      id: 's0q29', section: 'C-structured', number: 29, marks: 4, topic: 'Welch two-sample t-test',
+      prompt: 'Achievement-test scores for two groups (one had a prior course, one did not). Group1: 80,75,90,60,55,78,59,88,75,90; Group2: 98,75,89,96,77,69,80,90,74,93. Assuming unequal population variances and alpha = 5%, do the two groups differ on average? Show code and conclusion.',
+      answer: 'Welch two-sample t-test. H0: mu1 = mu2, H1: mu1 != mu2. t = -1.731, p = 0.1015 > 0.05 -> do NOT reject H0: insufficient evidence the two groups differ.',
+      solution: "from scipy import stats\ng1 = [80,75,90,60,55,78,59,88,75,90]\ng2 = [98,75,89,96,77,69,80,90,74,93]\nt_stat, p_value = stats.ttest_ind(g1, g2, equal_var=False)\nprint(\"t =\", round(t_stat, 3), \" p =\", round(p_value, 4))\n# t = -1.731, p = 0.1015 > 0.05 -> fail to reject H0: no significant difference.",
+    },
+    {
+      id: 's0q30', section: 'B-short', number: 30, marks: 2, topic: 'Combinations',
+      prompt: 'In a session with 12 couples (24 people), 4 people are selected at random. What is the probability that the selected people form exactly 2 couples (to 3 d.p.)?',
+      answer: '0.006',
+      solution: 'import math\n# choose 2 couples from 12, over choosing 4 people from 24\nprint(round(math.comb(12, 2) / math.comb(24, 4), 3))\n# 0.006',
+    },
+    {
+      id: 's0q31', section: 'B-short', number: 31, marks: 2, topic: 'Poisson',
+      prompt: 'Incidents occur as a Poisson process with mean 1.5 per day. (a) Probability that the first ten days total exactly 5 incidents. (b) Probability that all 30 days total at least 30 incidents. Report (a) to 4 d.p.',
+      answer: '(a) 0.0019  (b) 0.9927',
+      solution: 'from scipy import stats\n# (a) lambda over 10 days = 15\nprint("(a)", round(stats.poisson.pmf(5, 10*1.5), 4))\n# (b) lambda over 30 days = 45; P(X >= 30) = sf(29)\nprint("(b)", round(stats.poisson.sf(29, 30*1.5), 4))\n# (a) 0.0019   (b) 0.9927',
+    },
+    {
+      id: 's0q32', section: 'C-structured', number: 32, marks: 3, topic: 'Total probability / Bayes',
+      prompt: 'A company buys 60% of masks from distributor A and 40% from B. 3% of A and 2% of B fail specs. (a) Probability a mask fails specs and is from A. (b) Probability a mask fails specs (overall). Report to 3 d.p.',
+      answer: '(a) 0.018  (b) 0.026',
+      solution: '# (a) P(fail and A) = P(fail|A)*P(A)\nprint("(a)", round(0.03 * 0.6, 3))\n# (b) law of total probability\nprint("(b)", round(0.03*0.6 + 0.02*0.4, 3))\n# (a) 0.018   (b) 0.026',
+    },
+  ],
+}
+
+
 const SET1: MockSet = {
   id: 1,
   title: 'Mock Set 1',
@@ -1952,4 +2173,4 @@ const SET5: MockSet = {
   ],
 }
 
-export const mockSets: readonly MockSet[] = [SET1, SET2, SET3, SET4, SET5]
+export const mockSets: readonly MockSet[] = [SET0, SET1, SET2, SET3, SET4, SET5]

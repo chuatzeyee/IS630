@@ -332,7 +332,7 @@ function ExamView() {
                 : 'bg-surface text-ink-muted border-edge hover:bg-raised hover:text-ink'
             }`}
           >
-            Set {s.id}
+            {s.id === 0 ? 'Official' : `Set ${s.id}`}
           </button>
         ))}
         <span className="ml-auto text-xs text-ink-faint font-mono">
@@ -370,7 +370,7 @@ function ExamView() {
         <div className="mb-6 px-4 py-3 rounded-lg bg-surface border border-edge">
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-semibold text-ink flex items-center gap-1.5">
-              <History size={13} /> Attempt history - Set {setId}
+              <History size={13} /> Attempt history - {setId === 0 ? 'Official' : `Set ${setId}`}
             </span>
             <button onClick={clear} className="text-[10px] text-ink-faint hover:text-red-400 cursor-pointer">clear all</button>
           </div>
