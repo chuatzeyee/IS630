@@ -677,7 +677,7 @@ export default function MockExam() {
 
   return (
     <div className="max-w-4xl mx-auto px-6 py-10">
-      <div className="flex items-center gap-2 mb-6">
+      <div className="flex items-center gap-2 mb-6 flex-wrap">
         <button
           onClick={() => setTab('exam')}
           className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
@@ -688,17 +688,6 @@ export default function MockExam() {
         >
           <FileText size={15} />
           Practice Sets
-        </button>
-        <button
-          onClick={() => setTab('search')}
-          className={`flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
-            tab === 'search'
-              ? 'bg-glow-dim text-glow border border-glow/30'
-              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
-          }`}
-        >
-          <Search size={15} />
-          Search
         </button>
         <button
           onClick={() => setTab('bytype')}
@@ -721,6 +710,17 @@ export default function MockExam() {
         >
           <Wrench size={15} />
           Code Generator
+        </button>
+        <button
+          onClick={() => setTab('search')}
+          className={`ml-auto flex items-center gap-1.5 px-4 py-2 text-sm rounded-lg transition-all duration-150 cursor-pointer ${
+            tab === 'search'
+              ? 'bg-glow-dim text-glow border border-glow/30'
+              : 'bg-surface text-ink-secondary border border-edge hover:bg-raised hover:text-ink'
+          }`}
+        >
+          <Search size={15} />
+          Search
         </button>
       </div>
 
