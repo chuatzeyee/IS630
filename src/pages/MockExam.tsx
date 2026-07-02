@@ -709,7 +709,7 @@ export default function MockExam() {
           }`}
         >
           <Wrench size={15} />
-          Code Generator
+          Snippet
         </button>
         <button
           onClick={() => setTab('search')}
